@@ -1,0 +1,112 @@
+{
+  "books": [
+    {
+      "title": "Dune",
+      "lcCallNumber": "PS3563.E8134T45 2024",
+      "barcode": "35160721728168",
+      "shelvingLocation": "ARCHIVES",
+      "circulationModifier": "BOOK",
+      "status": "Available",
+      "location": "RBL"
+    },
+    {
+      "title": "To Kill a Mockingbird",
+      "lcCallNumber": "E185.97.K5 A3 2018",
+      "barcode": "15684765835898",
+      "shelvingLocation": "REFERENCE",
+      "circulationModifier": "MAGAZINE",
+      "status": "Available",
+      "location": "NYPL"
+    },
+    {
+      "title": "The Midnight Library",
+      "lcCallNumber": "BF637.C45 S58 2016",
+      "barcode": "67099297120242",
+      "shelvingLocation": "REFERENCE",
+      "circulationModifier": "EBOOK",
+      "status": "Missing",
+      "location": "NYPL"
+    },
+    {
+      "title": "Becoming",
+      "lcCallNumber": "QA76.73.J38 G36 2021",
+      "barcode": "84831695944314",
+      "shelvingLocation": "REFERENCE",
+      "circulationModifier": "EBOOK",
+      "status": "Checked Out",
+      "location": "BPL"
+    },
+    {
+      "title": "Where the Crawdads Sing",
+      "lcCallNumber": "QA76.9.D32 D38 2015",
+      "barcode": "62952734315769",
+      "shelvingLocation": "NEW BOOKS",
+      "circulationModifier": "DVD",
+      "status": "Lost",
+      "location": "NYPL"
+    },
+    {
+      "title": "The Night Circus",
+      "lcCallNumber": "PR6037.T617 B6 2020",
+      "barcode": "351160721728168",
+      "shelvingLocation": "STACKS",
+      "circulationModifier": "EBOOK",
+      "status": "Available",
+      "location": "RBL"
+    },
+    {
+      "title": "This Strange Eventful History: A Novel",
+      "lcCallNumber": "PR6037.T617 B6 2020",
+      "barcode": "45992260875584",
+      "shelvingLocation": "REFERENCE",
+      "circulationModifier": "JOURNAL",
+      "status": "Available",
+      "location": "NYPL"
+    },
+    {
+      "title": "The Book Thief",
+      "lcCallNumber": "FIC SMITH 2023",
+      "barcode": "50614665011393",
+      "shelvingLocation": "REFERENCE",
+      "circulationModifier": "EBOOK",
+      "status": "Available",
+      "location": "BPL"
+    },
+    {
+      "title": "The Night Circus",
+      "lcCallNumber": "PS3563.E8134T45 2024",
+      "barcode": "81056527980789",
+      "shelvingLocation": "NEW BOOKS",
+      "circulationModifier": "MAGAZINE",
+      "status": "Available",
+      "location": "LAPL"
+    },
+    {
+      "title": "The Silent Patient",
+      "lcCallNumber": "QA76.73.J38 G36 2021",
+      "barcode": "848316795944314",
+      "shelvingLocation": "ARCHIVES",
+      "circulationModifier": "EBOOK",
+      "status": "Checked Out",
+      "location": "LAPL"
+    }
+  ],
+  "locations": [
+    {
+      "name": "BPL",
+      "address": "123 Main St, Boston, MA 02118"
+    },
+    {
+      "name": "NYPL",
+      "address": "456 Main St, New York, NY 10001"
+    },
+    {
+      "name": "LAPL",
+      "address": "789 Main St, Los Angeles, CA 90001"
+    },
+    {
+      "name": "RBL",
+      "address": "465 university avenue, Prince Edward Island, C0A 1N0"
+    }
+  ]
+}
