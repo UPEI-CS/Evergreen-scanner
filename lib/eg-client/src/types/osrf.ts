@@ -1,4 +1,8 @@
-export interface OSRFMessage<T = OSRFResult<any> | OSRFConnectStatus | OSRFMethod> {
+import { AuthLoginResponse, AuthSessionDeleteResponse, AuthSessionResetResponse, AuthSessionRetrieveResponse, IAuth } from "./auth";
+
+export interface OSRFMessage<
+  T = OSRFResult<any> | OSRFConnectStatus | OSRFMethod
+> {
   __c: "osrfMessage";
   __p: {
     threadTrace: string;
@@ -39,17 +43,25 @@ export interface HTTPTranslatorConfig {
 
 export interface OpenSRFConfig {
   baseUrl: string;
-  gateway: 'osrf-gateway-v1' | 'osrf-http-translator';
+  gateway: "osrf-gateway-v1" | "osrf-http-translator";
 }
 
-export interface HttpTranslatorConfig extends OpenSRFConfig {
-  gateway: 'osrf-http-translator';
-  headers?: Record<string, string>;
+export type OSRFMethodMap = {
+  "open-ils.auth.session.retrieve": AuthSessionRetrieveResponse;
+  "open-ils.auth.login": AuthLoginResponse;
+  "open-ils.auth.session.delete": AuthSessionDeleteResponse;
+  "open-ils.auth.session.reset_timeout": AuthSessionResetResponse;
+};
+
+export interface IGateway {
+  readonly auth: IAuth;
+  send<M extends keyof OSRFMethodMap>(
+    req: OpenSRFRequest<M>
+  ): Promise<OSRFMethodMap[M]>;
 }
 
-export interface OpenSRFRequest {
+export interface OpenSRFRequest<T extends keyof OSRFMethodMap> {
   service: string;
-  method: string;
+  method: T;
   params: any[];
 }
-

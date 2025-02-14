@@ -1,61 +1,64 @@
 import {
   AuthCredentials,
   AuthLoginResponse,
+  AuthParams,
   AuthSessionRetrieveResponse,
+  IAuth,
+  IGateway,
+  ISession,
 } from "../types";
-import { OsrfHttpTranslator } from "../clients";
-import { ServiceBase } from "./base";
-export class AuthService extends ServiceBase {
-  public readonly session: SessionService;
-  constructor(client: OsrfHttpTranslator) {
-    super(client, "open-ils.auth");
-    this.session = new SessionService(this.client, this.service);
+export class AuthService implements IAuth {
+  public readonly session: ISession;
+  constructor(private readonly gateway: IGateway) {
+    this.session = new Session(gateway);
   }
 
   async login(credentials: AuthCredentials): Promise<AuthLoginResponse> {
-    return this.call<AuthLoginResponse>(
-      'open-ils.auth.login',
-      credentials
-    );
+    return this.gateway.send({
+      service: "open-ils.auth",
+      method: "open-ils.auth.login",
+      params: [credentials],
+    });
   }
 }
 
-class SessionService extends ServiceBase {
+class Session implements ISession {
+  constructor(private readonly gateway: IGateway) {}
   /**
    * Retrieve session information
    * @param authToken The authentication token
    * @param returnTime Whether to return session timeout information
-   * @param doNotResetSession If true, don't reset the session timeout
-   */
-  async retrieve(
-    authToken: string,
-    returnTime?: 0 | 1,
-    doNotResetSession?: 0 | 1
-  ): Promise<AuthSessionRetrieveResponse> {
-    return this.call<any>(
-      "open-ils.auth.session.retrieve",
-      authToken,
-      returnTime,
-      doNotResetSession
-    );
+   * @param doNotResetSession whether
+  */
+ async retrieve({authToken, returnTime, doNotResetSession}: AuthParams): Promise<AuthSessionRetrieveResponse> {
+   return this.gateway.send({
+     service: "open-ils.auth",
+     method: "open-ils.auth.session.retrieve",
+     params: [authToken, returnTime, doNotResetSession]
+    });
   }
-
+  
   /**
    * Delete/invalidate the session
-   */
-  async delete(): Promise<void> {
-    return this.call<any>(
-      "open-ils.auth.session.delete"
-    );
-  }
-
+   * @param authToken The authentication token
+  */
+ async delete({authToken}: Pick<AuthParams, "authToken">): Promise<any> {
+   return this.gateway.send({
+     service: "open-ils.auth",
+     method: "open-ils.auth.session.delete",
+     params: [authToken],
+   });
+ }
+ 
   /**
    * Reset the session timeout
+   * @param authToken The authentication token
    */
-  async resetTimeout(): Promise<any> {
-    return this.call<any>(
-      "open-ils.auth.session.reset_timeout"
-    );
+  async resetTimeout({authToken}: Pick<AuthParams, "authToken">): Promise<any> {
+    return this.gateway.send<any>({
+      service: "open-ils.auth",
+      method: "open-ils.auth.session.reset_timeout",
+      params: [authToken],
+    });
   }
 }
-
