@@ -3,18 +3,17 @@ import {
   AuthLoginResponse,
   AuthParams,
   AuthSessionRetrieveResponse,
-  IAuth,
-  IGateway,
-  ISession,
+  IAdapter,
+  AuthSessionDeleteResponse,
 } from "../types";
-export class AuthService implements IAuth {
-  public readonly session: ISession;
-  constructor(private readonly gateway: IGateway) {
-    this.session = new Session(gateway);
+export class AuthService {
+  public readonly session: SessionService;
+  constructor(private readonly adapter: IAdapter) {
+    this.session = new SessionService(adapter);
   }
 
   async login(credentials: AuthCredentials): Promise<AuthLoginResponse> {
-    return this.gateway.send({
+    return this.adapter.send<AuthLoginResponse>({
       service: "open-ils.auth",
       method: "open-ils.auth.login",
       params: [credentials],
@@ -22,8 +21,8 @@ export class AuthService implements IAuth {
   }
 }
 
-class Session implements ISession {
-  constructor(private readonly gateway: IGateway) {}
+class SessionService {
+  constructor(private readonly adapter: IAdapter) {}
   /**
    * Retrieve session information
    * @param authToken The authentication token
@@ -31,7 +30,7 @@ class Session implements ISession {
    * @param doNotResetSession whether
   */
  async retrieve({authToken, returnTime, doNotResetSession}: AuthParams): Promise<AuthSessionRetrieveResponse> {
-   return this.gateway.send({
+   return this.adapter.send({
      service: "open-ils.auth",
      method: "open-ils.auth.session.retrieve",
      params: [authToken, returnTime, doNotResetSession]
@@ -42,8 +41,8 @@ class Session implements ISession {
    * Delete/invalidate the session
    * @param authToken The authentication token
   */
- async delete({authToken}: Pick<AuthParams, "authToken">): Promise<any> {
-   return this.gateway.send({
+ async delete({authToken}: Pick<AuthParams, "authToken">): Promise<AuthSessionDeleteResponse> {
+   return this.adapter.send({
      service: "open-ils.auth",
      method: "open-ils.auth.session.delete",
      params: [authToken],
@@ -55,7 +54,7 @@ class Session implements ISession {
    * @param authToken The authentication token
    */
   async resetTimeout({authToken}: Pick<AuthParams, "authToken">): Promise<any> {
-    return this.gateway.send<any>({
+    return this.adapter.send({
       service: "open-ils.auth",
       method: "open-ils.auth.session.reset_timeout",
       params: [authToken],

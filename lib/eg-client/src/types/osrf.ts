@@ -1,67 +1,77 @@
-import { AuthLoginResponse, AuthSessionDeleteResponse, AuthSessionResetResponse, AuthSessionRetrieveResponse, IAuth } from "./auth";
+export type OSRFStatusCode = '200' | '205' | '404' | '500' | string;
+export type OSRFMessageType = 'RESULT' | 'STATUS' | 'REQUEST';
 
-export interface OSRFMessage<
-  T = OSRFResult<any> | OSRFConnectStatus | OSRFMethod
-> {
-  __c: "osrfMessage";
-  __p: {
-    threadTrace: string;
-    locale: string;
-    type: "RESULT" | "STATUS" | "REQUEST";
-    payload: T;
-  };
+export interface OSRFClass<T extends string, P> {
+  __c: T;
+  __p: P;
 }
 
-export interface OSRFMethod {
-  __c: "osrfMethod";
-  __p: {
-    method: string;
-    params: any[];
-  };
+// Common fields for all message types
+type MessageFields = {
+  type: OSRFMessageType;
+  threadTrace: string;
+  locale: string;
+  api_level: number;
 }
 
-export interface OSRFResult<T = any> {
-  __c: "osrfResult";
-  __p: {
-    status: string;
-    statusCode: string;
-    content: T;
-  };
+
+// Fields for REQUEST messages
+type RequestFields = Partial<MessageFields> & {
+  type: 'REQUEST';
 }
 
-export interface OSRFConnectStatus {
-  __c: "osrfConnectStatus";
-  __p: {
-    status: string;
-    statusCode: string;
-  };
+
+export type OSRFMessage<T = OSRFResult<any> | OSRFConnectStatus | OSRFMethod> = {
+  __c: 'osrfMessage';
+  __p: (T extends OSRFMethod 
+    ? RequestFields 
+    : MessageFields) & {
+      payload: T;
+    };
 }
+
+export interface OSRFMethod extends OSRFClass<'osrfMethod', {
+  method: string;
+  params: any[];
+}> {}
+
+
+export interface OSRFResult<T = any> extends OSRFClass<'osrfResult', {
+  status: string;
+  statusCode: OSRFStatusCode;
+  content: T;
+}> {}
+
+
+export interface OSRFConnectStatus extends OSRFClass<'osrfConnectStatus', {
+  status: string;
+  statusCode: OSRFStatusCode;
+}> {}
+
+export interface OSRFMethodException extends OSRFClass<'osrfMethodException', {
+  status: string;
+  statusCode: OSRFStatusCode;
+}> {}
 
 export interface HTTPTranslatorConfig {
   baseUrl?: string;
 }
 
-export interface OpenSRFConfig {
-  baseUrl: string;
-  gateway: "osrf-gateway-v1" | "osrf-http-translator";
+
+
+export interface IAdapter {
+  send<T>(
+    req: OpenSRFRequest
+  ): Promise<T>;
 }
 
-export type OSRFMethodMap = {
-  "open-ils.auth.session.retrieve": AuthSessionRetrieveResponse;
-  "open-ils.auth.login": AuthLoginResponse;
-  "open-ils.auth.session.delete": AuthSessionDeleteResponse;
-  "open-ils.auth.session.reset_timeout": AuthSessionResetResponse;
-};
-
-export interface IGateway {
-  readonly auth: IAuth;
-  send<M extends keyof OSRFMethodMap>(
-    req: OpenSRFRequest<M>
-  ): Promise<OSRFMethodMap[M]>;
-}
-
-export interface OpenSRFRequest<T extends keyof OSRFMethodMap> {
+export interface OpenSRFRequest {
   service: string;
-  method: T;
+  method: string;
   params: any[];
 }
+
+export type ServiceResponse<T> = [
+  OSRFMessage<OSRFResult<T>>,
+  OSRFMessage<OSRFConnectStatus>
+];

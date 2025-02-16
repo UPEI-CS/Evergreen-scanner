@@ -1,26 +1,30 @@
-import { AuthService } from "../services/auth";
+import { AuthService, PCrudService } from "../services";
 import {
-  IAuth,
-  IGateway,
+  IAdapter,
   OpenSRFRequest,
   OSRFMessage,
   OSRFMethod,
-  OSRFMethodMap,
   HTTPTranslatorConfig,
 } from "../types";
-
-export class HttpTranslator implements IGateway {
+export class HttpTranslator implements IAdapter {
   private authService?: AuthService;
+  private pcrudService?: PCrudService;
   constructor(private config: HTTPTranslatorConfig) {}
 
-  get auth(): IAuth {
+  get auth(): AuthService {
     if (!this.authService) {
       this.authService = new AuthService(this);
     }
     return this.authService;
   }
 
-  async send<T>(req: OpenSRFRequest<keyof OSRFMethodMap>): Promise<T> {
+   pcrud(authToken: string): PCrudService {
+    if (!this.pcrudService) {
+      this.pcrudService = new PCrudService(this, authToken);
+    }
+    return this.pcrudService;
+  }
+  async send<T>(req: OpenSRFRequest): Promise<T> {
     const { service, method, params } = req;
     const url = `${this.config.baseUrl}/osrf-http-translator`;
     const body: OSRFMessage<OSRFMethod>[] = [

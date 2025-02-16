@@ -1,45 +1,25 @@
+import { OSRFMessage, OSRFResult, OSRFConnectStatus } from "./osrf";
 
-export type PcrudParams = [
-    string,  
-    SearchQuery,
-    SearchOptions?
-];
-
-export interface SearchQuery {
-    id?: number;
-    barcode?: string;
-    call_number?: number;
-    circ_lib?: number;
-    location?: number;
-    status?: number;
-    deleted?: boolean;
-    opac_visible?: boolean;
-    circulate?: boolean;
-    ref?: boolean;
-    holdable?: boolean;
-    copy_number?: number;
-    circ_modifier?: string;
-    create_date?: string;
-    edit_date?: string;
-    [key: string]: any;
-}
-
-export interface SearchOptions {
+export interface PcrudOptions {
     flesh?: number;
-    flesh_fields?: {
-        [key: string]: string[];
-    };
-    order_by?: {
-        [key: string]: string | {
-            field: string;
-            direction: 'asc' | 'desc';
-        };
-    };
+    flesh_fields?: { [key: string]: string[] };
     limit?: number;
     offset?: number;
-    select?: {
-        [key: string]: string[];
-    };
+    order_by?: Array<{
+        class: string;
+        field: string;
+        direction: 'ASC' | 'DESC';
+    }>;
+}
+
+export interface PcrudRequestOptions {
+    authoritative?: boolean;
     atomic?: boolean;
     idlist?: boolean;
+    fleshSelectors?: boolean;
 }
+
+export type PcrudSearchResponse<T> = [
+    OSRFMessage<OSRFResult<T[]>>,
+    OSRFMessage<OSRFConnectStatus>
+];
