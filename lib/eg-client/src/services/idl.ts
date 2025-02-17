@@ -1,3 +1,5 @@
+import { IDL_DEFS, IdlClassDefinition, IdlClassName } from "../types/idl-types-metadata";
+
 // idl.service.ts
 export interface IdlObject {
     a: any[];
@@ -21,96 +23,102 @@ export interface IdlClass {
     classname: string;
 }
 
-export class IdlService {
-    private classes: { [key: string]: IdlClass } = {};
-    private constructors: { [key: string]: any } = {};
+export interface IdlService {
+    create<T extends IdlObject>(className: IdlClassName, seed?: any[]): T;
+    fromHash<T extends IdlObject>(className: IdlClassName, hash: Record<string, any>): T;
+    toHash(obj: IdlObject): Record<string, any>;
+    getClassDef(className: IdlClassName): IdlClassDefinition;
+    getPrimaryKey(className: IdlClassName): string | undefined;
+}
 
-    constructor(idlDefinitions?: any) {
-        if (idlDefinitions) {
-            this.loadIdl(idlDefinitions);
-        }
-    }
+export class IdlService implements IdlService {
 
-    loadIdl(definitions: any) {
-        this.classes = definitions;
-        this.parseIdl();
-    }
+    /**
+     * Create an IDL object
+     * @param className The class name
+     * @param seed The seed for the object
+     * @returns The IDL object with getters and setters for each field
+     */
 
-    private parseIdl(): void {
-        Object.keys(this.classes).forEach(className => {
-            this.createConstructor(className, this.classes[className].fields);
-        });
-    }
-
-    private createConstructor(className: string, fields: IdlField[]) {
-        this.classes[className].classname = className;
-
-        const generator = () => {
-            const Constructor = function(this: any, seed?: any[]) {
-                this.a = seed || [];
-                this.classname = className;
-                this._isfieldmapper = true;
-            };
-
-            fields.forEach((field, idx) => {
-                Constructor.prototype[field.name] = function(newValue?: any) {
-                    if (arguments.length === 1) {
-                        this.a[idx] = newValue;
-                    }
-                    return this.a[idx];
-                };
-            });
-
-            return Constructor;
+    create<T extends IdlObject>(className: IdlClassName, seed?: any[]): T {
+        const obj = {
+            a: seed,
+            classname: className,
+            _isfieldmapper: true
         };
 
-        this.constructors[className] = generator();
+        const fieldDefs = IDL_DEFS[className].fields;
+        
+        fieldDefs.forEach((field, index) => {
+            if (field.virtual && ['isnew', 'ischanged', 'isdeleted'].includes(field.name)) {
+                return;
+            }
+            
+            Object.defineProperty(obj, field.name, {
+                value: function(newValue?: any) {
+                    if (arguments.length === 1) {
+                        this.a[index] = newValue;
+                    }
+                    return this.a[index];
+                },
+                writable: false,
+                configurable: false
+            });
+        });
+
+        return obj as T;
     }
+    /**
+     * Create an IDL object from a hash
+     * @param className The class name
+     * @param hash The hash to create the object from
+     * @returns The IDL object with getters and setters for each field
+     */
 
-    create(className: string, seed?: any[]): IdlObject {
-        if (this.constructors[className]) {
-            return new this.constructors[className](seed);
-        }
-        throw new Error(`No such IDL class ${className}`);
+    fromHash<T extends IdlObject>(className: IdlClassName, hash: Record<string, any>): T {
+        const fieldDefs = IDL_DEFS[className].fields;
+        const arr = fieldDefs.map(field => hash[field.name]);
+        return this.create<T>(className, arr);
     }
+    /**
+     * Convert an IDL object to a hash
+     * @param obj The IDL object to convert
+     * @returns The hash of the IDL object
+     */
 
-    // Helper method to convert raw API response to IDL objects
-    fromHash(className: string, hash: any): IdlObject {
-        const cls = this.classes[className];
-        if (!cls) {
-            throw new Error(`No such IDL class ${className}`);
-        }
-
-        const seed = cls.fields.map(field => hash[field.name]);
-        const obj = this.create(className, seed);
-
-        return obj;
-    }
-
-    // Helper method to convert IDL object back to plain object
-    toHash(obj: IdlObject): any {
+    toHash(obj: IdlObject): Record<string, any> {
         if (!obj._isfieldmapper) {
-            return obj;
+            return obj as Record<string, any>;
         }
 
-        const cls = this.classes[obj.classname];
-        if (!cls) {
-            throw new Error(`No such IDL class ${obj.classname}`);
-        }
-
-        const hash: any = {};
-        cls.fields.forEach((field, idx) => {
-            hash[field.name] = obj.a[idx];
+        const fieldDefs = IDL_DEFS[obj.classname].fields;
+        const hash: Record<string, any> = {};
+        
+        fieldDefs.forEach((field, idx) => {
+            if (!field.virtual) {
+                hash[field.name] = obj.a[idx];
+            }
         });
 
         return hash;
     }
 
-    getClassDef(className: string): IdlClass | undefined {
-        return this.classes[className];
-    }
+    /**
+     * Get the class definition
+     * @param className The class name
+     * @returns The class definition
+     */
 
-    getPrimaryKey(className: string): string | undefined {
-        return this.classes[className]?.pkey;
+    getClassDef(className: IdlClassName): IdlClassDefinition {
+        return IDL_DEFS[className];
+    }
+    /**
+     * Get the primary key of the class
+     * @param className The class name
+     * @returns The primary key of the class
+     */
+
+    getPrimaryKey(className: IdlClassName): string | undefined {
+        return IDL_DEFS[className].pkey;
     }
 }

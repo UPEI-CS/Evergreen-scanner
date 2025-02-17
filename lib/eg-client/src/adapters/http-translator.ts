@@ -6,21 +6,25 @@ import {
   OSRFMethod,
   HTTPTranslatorConfig,
 } from "../types";
+import { IdlService } from "../services/idl";
 export class HttpTranslator implements IAdapter {
   private authService?: AuthService;
   private pcrudService?: PCrudService;
-  constructor(private config: HTTPTranslatorConfig) {}
+  private idl: IdlService;
+  constructor(private config: HTTPTranslatorConfig) {
+    this.idl = new IdlService();
+  }
 
   get auth(): AuthService {
     if (!this.authService) {
-      this.authService = new AuthService(this);
+      this.authService = new AuthService(this, this.idl);
     }
     return this.authService;
   }
 
    pcrud(authToken: string): PCrudService {
     if (!this.pcrudService) {
-      this.pcrudService = new PCrudService(this, authToken);
+      this.pcrudService = new PCrudService(this, authToken, this.idl);
     }
     return this.pcrudService;
   }
@@ -44,6 +48,7 @@ export class HttpTranslator implements IAdapter {
         },
       },
     ];
+    console.log(JSON.stringify(body, null, 2))
     const response = await fetch(url, {
       method: "POST",
       headers: {

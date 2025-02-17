@@ -1,9 +1,10 @@
-import { IAdapter } from "../types/osrf";
+import { IAdapter, ServiceResponse } from "../types/osrf";
 import {
   PcrudOptions,
   PcrudRequestOptions,
   PcrudSearchResponse,
 } from "../types";
+import { IdlService } from "./idl";
 export class PCrudService {
   private currentQuery: {
     fmClass: string;
@@ -11,7 +12,11 @@ export class PCrudService {
     options: PcrudOptions;
     reqOptions: PcrudRequestOptions;
   };
-  constructor(private readonly adapter: IAdapter, private readonly authToken: string) {
+  constructor(
+    private readonly adapter: IAdapter,
+    private readonly authToken: string,
+    private readonly idl: IdlService
+  ) {
     this.currentQuery = {
       fmClass: "",
       search: {},
@@ -60,7 +65,7 @@ export class PCrudService {
     return this;
   }
 
-    orderBy(field: string, direction: "ASC" | "DESC" = "ASC") {
+  orderBy(field: string, direction: "ASC" | "DESC" = "ASC") {
     if (!this.currentQuery.options.order_by) {
       this.currentQuery.options.order_by = [];
     }
@@ -82,13 +87,15 @@ export class PCrudService {
     return this;
   }
 
-  async select(): Promise<PcrudSearchResponse<any>> {
-    
+  async select() {
     const { fmClass, ...rest } = this.currentQuery;
-    return await this.adapter.send({
+
+    const [result, status] = await this.adapter.send<ServiceResponse<any>>({
       service: "open-ils.pcrud",
       method: `open-ils.pcrud.search.${fmClass}`,
       params: [this.authToken, ...Object.values(rest)],
     });
+
+    throw new Error("Not implemented");
   }
 }
