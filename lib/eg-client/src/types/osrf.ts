@@ -53,7 +53,7 @@ export interface OSRFMethodException extends OSRFClass<'osrfMethodException', {
   statusCode: OSRFStatusCode;
 }> {}
 
-export interface HTTPTranslatorConfig {
+export interface AdapterConfig {
   baseUrl?: string;
 }
 
@@ -73,5 +73,9 @@ export interface OpenSRFRequest {
 
 export type ServiceResponse<T> = [
   OSRFMessage<OSRFResult<T>>,
-  OSRFMessage<OSRFConnectStatus>
+  OSRFMessage<OSRFConnectStatus | OSRFMethodException>
 ];
+export interface ServiceResult<T = any, E = any> {
+  data: T | null;
+  error: E | null;
+}

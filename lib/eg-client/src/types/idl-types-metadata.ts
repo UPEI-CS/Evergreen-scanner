@@ -1,4 +1,4 @@
-const IDL_DEFINITIONS = require("./idl-definitions.json");
+const IDL_DEFINITIONS = require("./generated/idl-definitions.json");
 
 
 export interface IdlFieldDefinition {

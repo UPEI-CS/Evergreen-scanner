@@ -7,60 +7,113 @@ import {
   ServiceResponse,
   OSRFClass,
   AuthSessionResetResponse,
+  ServiceResult,
+  LoginPayload,
 } from "../types";
-import { AU } from "../types/generated/idl-interfaces";
+import { AU } from "../types/generated/idl-types";
 import { IdlService } from "./idl";
 export class AuthService {
   public readonly session: SessionService;
-  constructor(private readonly adapter: IAdapter, private readonly idl: IdlService) {
+  constructor(
+    private readonly adapter: IAdapter,
+    private readonly idl: IdlService
+  ) {
     this.session = new SessionService(adapter, idl);
   }
 
-  async login(credentials: AuthCredentials) {
+  async login(
+    credentials: AuthCredentials
+  ): Promise<ServiceResult<LoginPayload, string>> {
     const [result, status] = await this.adapter.send<AuthLoginResponse>({
       service: "open-ils.auth",
       method: "open-ils.auth.login",
       params: [credentials],
     });
 
+    if (status.__p.payload.__c === "osrfMethodException") {
+      return {
+        data: null,
+        error: status.__p.payload.__p.status,
+      };
+    }
     if (result.__p.payload.__p.status.toLowerCase() !== "ok") {
-      throw new Error(result.__p.payload.__p.status);
+      return {
+        data: null,
+        error: "unknown error",
+      };
+    }
+    if (result.__p.payload.__p.content.payload === undefined) {
+      return {
+        data: null,
+        error: result.__p.payload.__p.content.textcode,
+      };
     }
 
-    return result.__p.payload.__p.content.payload;
+    return {
+      data: result.__p.payload.__p.content.payload,
+      error: null,
+    };
   }
 }
 
 class SessionService {
-  constructor(private readonly adapter: IAdapter, private readonly idl: IdlService) {}
+  constructor(
+    private readonly adapter: IAdapter,
+    private readonly idl: IdlService
+  ) {}
   /**
    * Retrieve session information
    * @param authToken The authentication token
    * @param returnTime Whether to return session timeout information
    * @param doNotResetSession whether
    */
-  async retrieve({ authToken, returnTime, doNotResetSession }: AuthParams) {
+  async retrieve<T extends boolean>(
+    params: AuthParams & { returnTime: T }
+  ): Promise<
+    ServiceResult<
+      T extends true ? { authtime: number; userobj: AU } : AU,
+      string
+    >
+  > {
+    const { authToken, returnTime, doNotResetSession } = params;
     const [result, status] = await this.adapter.send<ServiceResponse<any>>({
       service: "open-ils.auth",
       method: "open-ils.auth.session.retrieve",
-      params: [authToken, returnTime, doNotResetSession],
+      params: [authToken, returnTime ? 1 : 0, doNotResetSession ? 1 : 0],
     });
 
-    if (result.__p.payload.__p.status.toLowerCase() !== "ok") {
-      throw new Error(result.__p.payload.__p.status);
+    if (status.__p.payload.__c === "osrfMethodException") {
+      return {
+        data: null,
+        error: status.__p.payload.__p.status,
+      };
     }
+
+    if (result.__p.payload.__p.status.toLowerCase() !== "ok") {
+      return {
+        data: null,
+        error: result.__p.payload.__p.status,
+      };
+    }
+
     if (returnTime) {
       const content = result.__p.payload.__p.content as {
         authtime: number;
         userobj: OSRFClass<"au", any[]>;
-      }
+      };
       return {
-        authtime: content.authtime,
-        userobj: this.idl.create<AU>("au", content.userobj.__p),
-      }
+        data: {
+          authtime: content.authtime,
+          userobj: this.idl.create<AU>("au", content.userobj.__p),
+        } as T extends true ? { authtime: number; userobj: AU } : AU,
+        error: null,
+      };
     }
 
-    return this.idl.create<AU>("au", result.__p.payload.__p.content.__p);
+    return {
+      data: this.idl.create<AU>("au", result.__p.payload.__p.content.__p) as T extends true ? { authtime: number; userobj: AU } : AU,
+      error: null,
+    };
   }
 
   /**
@@ -69,18 +122,33 @@ class SessionService {
    */
   async delete({
     authToken,
-  }: Pick<AuthParams, "authToken">) {
-    const [result, status] = await this.adapter.send<AuthSessionDeleteResponse>({
-      service: "open-ils.auth",
-      method: "open-ils.auth.session.delete",
-      params: [authToken],
-    });
+  }: Pick<AuthParams, "authToken">): Promise<ServiceResult<string, string>> {
+    const [result, status] = await this.adapter.send<AuthSessionDeleteResponse>(
+      {
+        service: "open-ils.auth",
+        method: "open-ils.auth.session.delete",
+        params: [authToken],
+      }
+    );
 
-    if(result.__p.payload.__p.status.toLowerCase() !== "ok") {
-      throw new Error(result.__p.payload.__p.status);
+    if (status.__p.payload.__c === "osrfMethodException") {
+      return {
+        data: null,
+        error: status.__p.payload.__p.status,
+      };
     }
 
-    return result.__p.payload.__p.content;
+    if (result.__p.payload.__p.status.toLowerCase() !== "ok") {
+      return {
+        data: null,
+        error: result.__p.payload.__p.status,
+      };
+    }
+
+    return {
+      data: result.__p.payload.__p.content,
+      error: null,
+    };
   }
 
   /**
@@ -89,17 +157,29 @@ class SessionService {
    */
   async resetTimeout({
     authToken,
-  }: Pick<AuthParams, "authToken">): Promise<any> {
+  }: Pick<AuthParams, "authToken">): Promise<ServiceResult<any, string>> {
     const [result, status] = await this.adapter.send<AuthSessionResetResponse>({
       service: "open-ils.auth",
       method: "open-ils.auth.session.reset_timeout",
       params: [authToken],
     });
 
-    if(result.__p.payload.__p.status.toLowerCase() !== "ok") {
-      throw new Error(result.__p.payload.__p.status);
+    if (status.__p.payload.__c === "osrfMethodException") {
+      return {
+        data: null,
+        error: status.__p.payload.__p.status,
+      };
+    }
+    if (result.__p.payload.__p.status.toLowerCase() !== "ok") {
+      return {
+        data: null,
+        error: result.__p.payload.__p.status,
+      };
     }
 
-    return result.__p.payload.__p.content.payload;
+    return {
+      data: result.__p.payload.__p.content.payload,
+      error: null,
+    };
   }
 }

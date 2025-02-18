@@ -4,14 +4,14 @@ import {
   OpenSRFRequest,
   OSRFMessage,
   OSRFMethod,
-  HTTPTranslatorConfig,
+  AdapterConfig,
 } from "../types";
 import { IdlService } from "../services/idl";
 export class HttpTranslator implements IAdapter {
   private authService?: AuthService;
   private pcrudService?: PCrudService;
   private idl: IdlService;
-  constructor(private config: HTTPTranslatorConfig) {
+  constructor(private config: AdapterConfig) {
     this.idl = new IdlService();
   }
 
@@ -48,7 +48,6 @@ export class HttpTranslator implements IAdapter {
         },
       },
     ];
-    console.log(JSON.stringify(body, null, 2))
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -57,6 +56,9 @@ export class HttpTranslator implements IAdapter {
       },
       body: `osrf-msg=${encodeURIComponent(JSON.stringify(body))}`,
     });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const data = await response.json();
     return data as T;
   }

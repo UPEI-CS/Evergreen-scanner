@@ -1,4 +1,4 @@
-import { OSRFMessage, OSRFResult, OSRFConnectStatus, OSRFClass } from "./osrf";
+import {OSRFClass, ServiceResponse } from "./osrf";
 
 export type AuthTextCode = 
   | 'SUCCESS'
@@ -58,27 +58,17 @@ export interface AuthParams {
   /** Authentication token for the session */
   authToken: string;
   /** Whether to return the auth time (0 = no, 1 = yes) */
-  returnTime?: 0 | 1;
+  returnTime?: boolean;
   /** Whether to prevent session timeout reset (0 = no, 1 = yes) */
-  doNotResetSession?: 0 | 1;
+  doNotResetSession?: boolean;
 }
 
-export type AuthLoginResponse = [
-  OSRFMessage<OSRFResult<AuthContent<LoginPayload>>>,
-  OSRFMessage<OSRFConnectStatus>
-];
+export type AuthLoginResponse = ServiceResponse<AuthContent<LoginPayload>>;
 
-export type AuthSessionResetResponse = [
-  OSRFMessage<OSRFResult<AuthContent<number>>>,
-  OSRFMessage<OSRFConnectStatus>
-];
+export type AuthSessionResetResponse = ServiceResponse<AuthContent<number>>;
 
-export type AuthSessionRetrieveResponse = [
-  OSRFMessage<OSRFResult<UserObject | SessionContentWithReturnTime>>,
-  OSRFMessage<OSRFConnectStatus>
-];
+export type AuthSessionRetrieveResponse = ServiceResponse<UserObject | SessionContentWithReturnTime>;
 
-export type AuthSessionDeleteResponse = [
-  OSRFMessage<OSRFResult<string>>,
-  OSRFMessage<OSRFConnectStatus>
-];
+export type AuthSessionDeleteResponse = ServiceResponse<string>;
+
+/** Standard service result format */

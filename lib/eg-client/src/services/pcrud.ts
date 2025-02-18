@@ -1,17 +1,19 @@
-import { IAdapter, ServiceResponse } from "../types/osrf";
+import { IAdapter, ServiceResponse, ServiceResult } from "../types/osrf";
 import {
   PcrudOptions,
   PcrudRequestOptions,
-  PcrudSearchResponse,
 } from "../types";
 import { IdlService } from "./idl";
-export class PCrudService {
+import { IdlClassMapping, IdlClassName } from "../types/generated/idl-types";
+
+export class PCrudService<T extends IdlClassName | undefined = undefined> {
   private currentQuery: {
     fmClass: string;
     search?: object;
     options: PcrudOptions;
     reqOptions: PcrudRequestOptions;
   };
+
   constructor(
     private readonly adapter: IAdapter,
     private readonly authToken: string,
@@ -34,60 +36,33 @@ export class PCrudService {
     };
   }
 
-  from(fmClass: string) {
-    this.resetQuery();
-    this.currentQuery.fmClass = fmClass;
-    return this;
+  from<K extends IdlClassName>(fmClass: K): PCrudService<K> {
+    const newService = new PCrudService<K>(this.adapter, this.authToken, this.idl);
+    newService.currentQuery.fmClass = fmClass;
+    return newService;
   }
 
-  where(search: object) {
+  where(search: object): this {
     this.currentQuery.search = search;
     return this;
   }
 
-  flesh(depth: number) {
+  flesh(depth: number): this {
     this.currentQuery.options.flesh = depth;
     return this;
   }
 
-  fleshFields(fields: { [key: string]: string[] }) {
+  fleshFields(fields: { [key: string]: string[] }): this {
     this.currentQuery.options.flesh_fields = fields;
     return this;
   }
 
-  limit(limit: number) {
+  limit(limit: number): this {
     this.currentQuery.options.limit = limit;
     return this;
   }
 
-  offset(offset: number) {
-    this.currentQuery.options.offset = offset;
-    return this;
-  }
-
-  orderBy(field: string, direction: "ASC" | "DESC" = "ASC") {
-    if (!this.currentQuery.options.order_by) {
-      this.currentQuery.options.order_by = [];
-    }
-    this.currentQuery.options.order_by.push({
-      class: this.currentQuery.fmClass,
-      field: field,
-      direction: direction,
-    });
-    return this;
-  }
-
-  authoritative(value: boolean = true) {
-    this.currentQuery.reqOptions.authoritative = value;
-    return this;
-  }
-
-  atomic(value: boolean = true) {
-    this.currentQuery.reqOptions.atomic = value;
-    return this;
-  }
-
-  async select() {
+  async select(): Promise<ServiceResult<T extends IdlClassName ? IdlClassMapping[T] : never, string>> {
     const { fmClass, ...rest } = this.currentQuery;
 
     const [result, status] = await this.adapter.send<ServiceResponse<any>>({
@@ -95,7 +70,23 @@ export class PCrudService {
       method: `open-ils.pcrud.search.${fmClass}`,
       params: [this.authToken, ...Object.values(rest)],
     });
-
-    throw new Error("Not implemented");
+    if (status.__p.payload.__c === "osrfMethodException") {
+      return {
+        data: null,
+        error: status.__p.payload.__p.status
+      };
+    }
+    if (result.__p.payload.__p.status.toLowerCase() !== "ok") {
+      return {
+        data: null,
+        error: result.__p.payload.__p.status
+      };
+    }
+    const content = result.__p.payload.__p.content.__p;
+    return {
+      data: this.idl.create<T extends IdlClassName ? IdlClassMapping[T] : never>(fmClass as any, content),
+      error: null
+    };
   }
 }
+

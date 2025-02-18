@@ -4,14 +4,7 @@ import { createContext, runInContext, RunningScriptOptions } from "vm";
 import dotenv from "dotenv";
 dotenv.config();
 
-interface IdlClassDef {
-  fields: IdlFieldDef[];
-  field_map: { [key: string]: IdlFieldDef };
-  classname: string;
-  pkey?: string;
-}
-
-interface IdlFieldDef {
+export interface IdlFieldDef {
   name: string;
   datatype: string;
   required?: boolean;
@@ -21,23 +14,44 @@ interface IdlFieldDef {
   label?: string;
 }
 
-function generateTypeDefinitions(idlData: {
-  [key: string]: IdlClassDef;
-}): string {
-  let output = "";
+export interface IdlClassDef {
+  fields: IdlFieldDef[];
+  field_map: { [key: string]: IdlFieldDef };
+  classname: string;
+  pkey?: string;
+  label?: string;
+}
 
-  
-  output += `
+// New interface to represent all IDL classes
+export interface IdlClasses {
+  [className: string]: IdlClassDef;
+}
+
 /**
-* Base interface for all Fieldmapper objects
-*/
+ * Base interface for all Fieldmapper objects
+ */
 export interface IdlObject {
   a: any[];
   classname: string;
   _isfieldmapper: boolean;
 }
 
-`;
+/**
+ * Mapping of IDL class names to their corresponding interfaces
+ */
+export interface IdlClassMapping {
+  [className: string]: IdlObject;
+}
+
+
+function generateTypeDefinitions(idlData: IdlClasses): string {
+  let output = "";
+
+  output += `export interface IdlObject {
+  a: any[];
+  classname: string;
+  _isfieldmapper: boolean;
+}\n\n`;
 
   for (const [className, classDef] of Object.entries(idlData)) {
     const interfaceName = className.toUpperCase();
@@ -64,6 +78,21 @@ export interface IdlObject {
 
     output += "}\n\n";
   }
+  output += "/**\n";
+  output += " * Mapping of IDL class names to their corresponding interfaces\n";
+  output += " */\n";
+  output += "export interface IdlClassMapping {\n";
+  for (const [className, classDef] of Object.entries(idlData)) {
+    output += `  /** ${classDef.label ? ` ${classDef.label}` : ''} */\n`;
+    output += `  "${className}": ${className.toUpperCase()};\n`;
+  }
+  output += "}\n\n";
+
+  // Add IdlClassName type
+  output += "/**\n";
+  output += " * Valid IDL class names\n";
+  output += " */\n";
+  output += "export type IdlClassName = keyof IdlClassMapping;\n";
 
   return output;
 }

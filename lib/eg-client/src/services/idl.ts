@@ -1,26 +1,9 @@
-import { IDL_DEFS, IdlClassDefinition, IdlClassName } from "../types/idl-types-metadata";
+import {  IDL_DEFS, IdlClassDefinition, IdlClassName } from "../types/idl-types-metadata";
+import { IdlObject } from "../types/generated/idl-types";
 
-// idl.service.ts
-export interface IdlObject {
-    a: any[];
-    classname: string;
-    _isfieldmapper: boolean;
-    [key: string]: any;
-}
-
-export interface IdlField {
-    name: string;
-    label?: string;
-    datatype: string;
-    selector?: string;
-    class?: string;
-}
-
-export interface IdlClass {
-    fields: IdlField[];
-    field_map: { [key: string]: IdlField };
-    pkey: string;
-    classname: string;
+interface OsrfObject {
+    __c: string;
+    __p: any[];
 }
 
 export interface IdlService {
@@ -32,6 +15,25 @@ export interface IdlService {
 }
 
 export class IdlService implements IdlService {
+    private isOsrfObject(value: any): value is OsrfObject {
+        return value && 
+               typeof value === 'object' && 
+               '__c' in value && 
+               '__p' in value &&
+               Array.isArray(value.__p);
+    }
+
+    private processFieldValue(value: any): any {
+        if (this.isOsrfObject(value)) {
+            return this.create(value.__c as IdlClassName, value.__p);
+        }
+        
+        if (Array.isArray(value)) {
+            return value.map(item => this.processFieldValue(item));
+        }
+        
+        return value;
+    }
 
     /**
      * Create an IDL object
@@ -39,10 +41,11 @@ export class IdlService implements IdlService {
      * @param seed The seed for the object
      * @returns The IDL object with getters and setters for each field
      */
-
     create<T extends IdlObject>(className: IdlClassName, seed?: any[]): T {
+        const processedSeed = seed ? seed.map(value => this.processFieldValue(value)) : [];
+        
         const obj = {
-            a: seed,
+            a: processedSeed,
             classname: className,
             _isfieldmapper: true
         };
@@ -57,7 +60,7 @@ export class IdlService implements IdlService {
             Object.defineProperty(obj, field.name, {
                 value: function(newValue?: any) {
                     if (arguments.length === 1) {
-                        this.a[index] = newValue;
+                        this.a[index] = this.processFieldValue(newValue);
                     }
                     return this.a[index];
                 },
@@ -103,22 +106,4 @@ export class IdlService implements IdlService {
         return hash;
     }
 
-    /**
-     * Get the class definition
-     * @param className The class name
-     * @returns The class definition
-     */
-
-    getClassDef(className: IdlClassName): IdlClassDefinition {
-        return IDL_DEFS[className];
-    }
-    /**
-     * Get the primary key of the class
-     * @param className The class name
-     * @returns The primary key of the class
-     */
-
-    getPrimaryKey(className: IdlClassName): string | undefined {
-        return IDL_DEFS[className].pkey;
-    }
 }
