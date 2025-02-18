@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { HttpTranslator } from "@/lib/eg-client/src/gateways/http-translator";
+import { client } from "@/lib/eg-client";
 export async function POST(request: Request) {
   const { username, password } = await request.json();
   const baseUrl = process.env.EG_BASE_URL;
@@ -9,43 +9,35 @@ export async function POST(request: Request) {
       status: 500,
     });
   }
-  const httpTranslator = new HttpTranslator({
-    baseUrl,
-  });
-  const [result] = await httpTranslator.auth.login({
+  const {data, error} = await client.auth.login({
     username,
     password,
     type: "staff",
-  });
-  try {
-    const resultStatus = result.__p.payload.__p.status;
-    if (resultStatus !== "OK") {
-      throw new Error(resultStatus);
-    }
-  } catch (error) {
+  })
+  if (error || !data) {
     return NextResponse.json({
-      message: "Error: " + error,
+      message: `failed to login: ${error}`,
       status: 500,
     });
   }
-  const payload = result.__p.payload.__p.content.payload;
+
   const response = NextResponse.json({
     message: "success",
     status: 200,
   });
-  response.cookies.set("EG_AUTH_TOKEN", payload.authtoken, {
+  response.cookies.set("EG_AUTH_TOKEN", data.authtoken, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: payload.authtime,
+    maxAge: data.authtime,
   });
-  response.cookies.set("EG_AUTH_TIME", payload.authtime.toString(), {
+  response.cookies.set("EG_AUTH_TIME", data.authtime.toString(), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: payload.authtime,
+    maxAge: data.authtime,
   });
   return response;
 }
