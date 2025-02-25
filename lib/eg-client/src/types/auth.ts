@@ -1,73 +1,74 @@
-import { OSRFMessage, OSRFResult, OSRFConnectStatus } from "./osrf";
-export interface SessionRetrieveContent {
-  __c: "au";
-  __p: any[];
-}
+import {OSRFClass, ServiceResponse } from "./osrf";
 
+export type AuthTextCode = 
+  | 'SUCCESS'
+  | 'LOGIN_FAILED'
+  | 'NO_SESSION'
+  | string;
+
+/** User object structure */
+export interface UserObject extends OSRFClass<'au', any[]> {}
+
+/** Session content with return time */
 export interface SessionContentWithReturnTime {
   authtime: number;
-  userobj: SessionRetrieveContent;
+  userobj: UserObject;
 }
 
+/** Authentication credentials */
 export interface AuthCredentials {
+  /** Username for login */
   username: string;
+  /** Password for login */
   password: string;
-  type: "staff" | "opac";
+  /** Type of login being performed */
+  type: 'staff' | 'opac';
+  /** Optional organization ID */
   org?: number | null;
 }
 
+/** Base auth response content */
 export interface AuthContent<T = LoginPayload | number> {
+  /** Event ID indicating success/failure */
   ilsevent: number;
-  textcode: string;
+  /** Text code describing the event */
+  textcode: AuthTextCode;
+  /** Human-readable description */
   desc: string;
+  /** Process ID */
   pid: number;
+  /** Stack trace */
   stacktrace: string;
+  /** Payload data - can be LoginPayload for successful login or number for other responses */
   payload: T;
 }
 
+/** Successful login response payload */
 export interface LoginPayload {
+  /** Authentication token for the session */
   authtoken: string;
+  /** Session timeout in seconds */
   authtime: number;
-  provisional: number;
+  /** Whether the login is provisional (0 = no, 1 = yes) */
+  provisional: 0 | 1;
 }
 
+/** Parameters for authentication operations */
 export interface AuthParams {
+  /** Authentication token for the session */
   authToken: string;
-  returnTime?: 0 | 1;
-  doNotResetSession?: 0 | 1;
+  /** Whether to return the auth time (0 = no, 1 = yes) */
+  returnTime?: boolean;
+  /** Whether to prevent session timeout reset (0 = no, 1 = yes) */
+  doNotResetSession?: boolean;
 }
 
-export interface IAuth {
-  login(credentials: AuthCredentials): Promise<AuthLoginResponse>;
-  session: ISession;
-}
-export interface ISession {
-  retrieve(params: AuthParams): Promise<AuthSessionRetrieveResponse>;
-  delete(params: Pick<AuthParams, "authToken">): Promise<AuthSessionDeleteResponse>;
-  resetTimeout(
-    params: Pick<AuthParams, "authToken">
-  ): Promise<AuthSessionResetResponse>;
-}
+export type AuthLoginResponse = ServiceResponse<AuthContent<LoginPayload>>;
 
-export type ServiceResponse<T> = [
-  OSRFMessage<T>,
-  OSRFMessage<OSRFConnectStatus>
-];
+export type AuthSessionResetResponse = ServiceResponse<AuthContent<number>>;
 
-export type AuthLoginResponse = ServiceResponse<
-  OSRFResult<AuthContent<LoginPayload>>
->;
-export type AuthSessionResetResponse = ServiceResponse<
-  OSRFResult<AuthContent<number>>
->;
-export type AuthSessionRetrieveResponse = [
-  OSRFMessage<
-    OSRFResult<SessionRetrieveContent | SessionContentWithReturnTime>
-  >,
-  OSRFMessage<OSRFConnectStatus>
-];
+export type AuthSessionRetrieveResponse = ServiceResponse<UserObject | SessionContentWithReturnTime>;
 
-export type AuthSessionDeleteResponse = [
-  OSRFMessage<OSRFResult<string>>,
-  OSRFMessage<OSRFConnectStatus>
-];
+export type AuthSessionDeleteResponse = ServiceResponse<string>;
+
+/** Standard service result format */

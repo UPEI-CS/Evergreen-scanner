@@ -10,6 +10,9 @@
 !.yarn/releases
 !.yarn/versions
 
+# generated
+/lib/eg-client/src/types/generated
+
 # testing
 /coverage
 

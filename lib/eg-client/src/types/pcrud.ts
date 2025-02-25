@@ -1,45 +1,48 @@
 
-export type PcrudParams = [
-    string,  
-    SearchQuery,
-    SearchOptions?
-];
+/**
+ * PCRUD options
+ */
+export interface PcrudOptions {
+    /**
+     * number of linked records to retrieve 
+     */
+    flesh?: number;
+    /**
+     * Object specifying which linked fields to retrieve
+     * 
+     */
+    flesh_fields?: { [key: string]: string[] };
+    /**
+     * Number for limiting results
+     */
+    limit?: number;
+    /**
+     * Number for pagination offset
+     */
+    offset?: number;
+    /**
+     * The order by of the request
+     */
 
-export interface SearchQuery {
-    id?: number;
-    barcode?: string;
-    call_number?: number;
-    circ_lib?: number;
-    location?: number;
-    status?: number;
-    deleted?: boolean;
-    opac_visible?: boolean;
-    circulate?: boolean;
-    ref?: boolean;
-    holdable?: boolean;
-    copy_number?: number;
-    circ_modifier?: string;
-    create_date?: string;
-    edit_date?: string;
-    [key: string]: any;
 }
 
-export interface SearchOptions {
-    flesh?: number;
-    flesh_fields?: {
-        [key: string]: string[];
-    };
-    order_by?: {
-        [key: string]: string | {
-            field: string;
-            direction: 'asc' | 'desc';
-        };
-    };
-    limit?: number;
-    offset?: number;
-    select?: {
-        [key: string]: string[];
-    };
+/**
+ * Optional request operations
+ */
+export interface PcrudRequestOptions {
+   
+    authoritative?: boolean;
     atomic?: boolean;
+    /**
+     * If true, returns only IDs instead of full objects
+     */
     idlist?: boolean;
+    /**
+     *  Whether to make an anonymous request
+     */
+    anonymous?: boolean;
+    /**
+     * If true, returns only the selectors for the request
+     */
+    fleshSelectors?: boolean
 }
