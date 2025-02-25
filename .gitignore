@@ -11,7 +11,7 @@
 !.yarn/versions
 
 # generated
-/lib/eg-client/src/types/generated
+**/generated
 
 # testing
 /coverage
