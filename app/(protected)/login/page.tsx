@@ -1,7 +1,7 @@
-"use client"; // Mark this component as a client component
+"use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // Correct hook for the `app` directory
+import { useRouter } from "next/navigation"; 
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -13,24 +13,19 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const response = await fetch("/api/authenticate", {
+      const response = await fetch("/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ username, password }),
       });
-
-      if (!response.ok) {
-        throw new Error("Invalid username or password");
-      }
-
       const data = await response.json();
 
-      // Store token or session info
-      localStorage.setItem("token", data.token);
+      if (!response.ok) {
+        throw new Error(data.error);
+      }
 
-      // Navigate to the home page
       router.push("/");
     } catch (err: any) {
       setError(err.message);

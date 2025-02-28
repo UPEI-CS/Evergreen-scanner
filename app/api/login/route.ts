@@ -4,21 +4,19 @@ export async function POST(request: Request) {
   const { username, password } = await request.json();
   const baseUrl = process.env.EG_BASE_URL;
   if (!baseUrl) {
-    return NextResponse.json({
-      message: "could not find EG_BASE_URL",
-      status: 500,
-    });
+    return NextResponse.json(
+      { error: "could not find EG_BASE_URL" },
+      { status: 500 }
+    );
   }
-  const {data, error} = await client.auth.login({
+  const { data, error } = await client.auth.login({
     username,
     password,
     type: "staff",
-  })
+  });
+  console.log(data, error);
   if (error || !data) {
-    return NextResponse.json({
-      message: `failed to login: ${error}`,
-      status: 500,
-    });
+    return NextResponse.json({ error: error }, { status: 401 });
   }
 
   const response = NextResponse.json({
