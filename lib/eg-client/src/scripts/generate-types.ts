@@ -2,6 +2,7 @@ import { writeFileSync } from "fs";
 import path from "path";
 import { createContext, runInContext, RunningScriptOptions } from "vm";
 import dotenv from "dotenv";
+import fs from "fs";
 dotenv.config();
 
 export interface IdlFieldDef {
@@ -147,6 +148,8 @@ function evalIDLScript(js: string) {
 }
 
 async function main() {
+  console.log("📥 Fetching IDL script...");
+  
   const baseUrl = process.env.EG_BASE_URL;
   if (!baseUrl) {
     throw new Error("EG_BASE_URL environment variable is not set");
@@ -158,19 +161,34 @@ async function main() {
   }
 
   const js = await response.text();
+  console.log("⚙️ Processing IDL data...");
   const idlData = evalIDLScript(js);
 
+  console.log("📝 Generating type definitions...");
   const typeDefinitions = generateTypeDefinitions(idlData);
 
+  const generatedTypesDir = path.join(__dirname, "../types/generated");
+  
+  console.log("📁 Creating output directory...");
+  try {
+    await fs.promises.mkdir(generatedTypesDir, { recursive: true });
+  } catch (error) {
+    console.error("Error creating directory:", error);
+    throw error;
+  }
+
+  console.log("💾 Writing output files...");
   writeFileSync(
-    path.join(__dirname, "../types/generated/idl-definitions.json"),
+    path.join(generatedTypesDir, "idl-definitions.json"),
     JSON.stringify(idlData, null, 2)
   );
   
   writeFileSync(
-    path.join(__dirname, "../types/generated/idl-types.ts"),
+    path.join(generatedTypesDir, "idl-types.ts"),
     typeDefinitions
   );
+
+  console.log("✅ Type generation complete!");
 }
 
 main();
