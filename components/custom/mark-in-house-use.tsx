@@ -7,9 +7,7 @@ import { toast } from "sonner"
 
 export default function markInHouseUse({ barcode }: { barcode: string }) {
   const markUse = () => 
-    //mark in house use function here
   
-    //Success / fail messages
     toast("Mark In-house Use Successfull!")
     toast("Mark In-house Use Failed!")     
   return (
