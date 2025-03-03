@@ -3,12 +3,10 @@ export default function ProtectedLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (<main>
-    <div>
-      header
-      </div>
+  return (
+    <main>
+    
       {children}
-      <div>footer</div>
     </main>
   );
 }
