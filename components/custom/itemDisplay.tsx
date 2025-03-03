@@ -16,7 +16,7 @@ export interface ItemInfo {
 
 const itemLabels: Record<keyof ItemInfo, string> = {
   title: "Title",
-  lcCallNumber: "LC Call Number",
+  lcCallNumber: "Call Number",
   barcode: "Barcode",
   shelvingLocation: "Shelving Location",
   circulationModifier: "Circulation Modifier",
@@ -26,9 +26,9 @@ const itemLabels: Record<keyof ItemInfo, string> = {
 export default function ItemDisplay({ iteminfo }: { iteminfo: ItemInfo }) {
   const [displayState, setDisplayState] = useState<"item" | "status">("item");
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-4 w-[350px]">
       {displayState === "item" ? (
-        <div className="rounded-md border">
+        <div className="rounded-md border w-full">
           <Table>
             <TableBody>
               {(Object.entries(itemLabels) as [keyof ItemInfo, string][]).map(
@@ -43,7 +43,7 @@ export default function ItemDisplay({ iteminfo }: { iteminfo: ItemInfo }) {
           </Table>
         </div>
       ) : (
-        <div className="rounded-md border">
+        <div className="rounded-md border w-full">
           <Table>
             <TableBody>
               {(["title", "barcode", "status"] as const).map((key) => (
@@ -77,7 +77,7 @@ export default function ItemDisplay({ iteminfo }: { iteminfo: ItemInfo }) {
           <>
             {/** TODO: make sure barcode and status are always defined */}
             <Button className="shadow-md bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-full">
-              Mark In-House Use
+              Record In-House Use
             </Button>
             <StatusSelect status={iteminfo.status || ""} />
           </>

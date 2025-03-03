@@ -1,6 +1,4 @@
-import { Button } from "@/components/ui/button";
 import ItemDisplay, { ItemInfo } from "@/components/custom/itemDisplay";
-import Link from "next/link";
 import { client } from "@/lib/eg-client";
 import { cookies } from "next/headers";
 
@@ -21,10 +19,11 @@ export default async function BookPage({
     .where({
       id: itemID,
     })
-    .flesh(2)
+    .flesh(3)
     .fleshFields({
       acp: ["location", "status", "call_number"],
       acn: ["record"],
+      bre: ["simple_record"],
     })
     .select();
   if (!data || error) {
@@ -32,7 +31,7 @@ export default async function BookPage({
   }
   const barcode = data.barcode();
   const callnumber = data.call_number()?.label();
-  const title = data.call_number()?.record()?.fingerprint();
+  const title = data.call_number()?.record()?.simple_record()?.title();
   const location = data.location()?.name();
   const status = data.status()?.name();
   const circulationModifier = data.circ_modifier()?.name();
@@ -46,7 +45,7 @@ export default async function BookPage({
   };
   return (
     <section className="h-dvh flex justify-center mt-10">
-      <ItemDisplay iteminfo={itemInfo}/>
+      <ItemDisplay iteminfo={itemInfo} />
     </section>
   );
 }
