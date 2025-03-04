@@ -17,7 +17,7 @@ export default async function BookPage({
     .pcrud(authToken)
     .from("acp")
     .where({
-      id: itemID,
+      barcode: itemID,
     })
     .flesh(3)
     .fleshFields({

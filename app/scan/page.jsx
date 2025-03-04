@@ -7,9 +7,17 @@ import Webcam from "react-webcam";
 
 export default function ScanPage() {
   const [barcode, setBarcode] = useState("");
+  const [bookDetails, setBookDetails] = useState(null);
   const [error, setError] = useState("");
   const webcamRef = useRef(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (barcode) {
+      //fetchBookDetails(barcode);
+      router.push(`/${barcode}`);
+    }
+  }, [barcode]);
 
   useEffect(() => {
     if (webcamRef.current) {
@@ -40,8 +48,7 @@ export default function ScanPage() {
         },
         locate: true,
         area: {
-          // Define a smaller scanning area within the red box
-          top: "40%", // Reduce scanning area to focus on the red box
+          top: "40%",
           right: "20%",
           left: "20%",
           bottom: "60%",
@@ -62,15 +69,47 @@ export default function ScanPage() {
         data.codeResult.code &&
         data.codeResult.decodedCodes.length > 5
       ) {
-        console.log("Barcode detected:", data.codeResult.code);
+        console.log("✅ Barcode detected:", data.codeResult.code);
         setBarcode(data.codeResult.code);
         Quagga.stop();
       }
     });
   };
 
+  const fetchBookDetails = async (barcode) => {
+    setError(""); // Reset errors
+    setBookDetails(null); // Clear previous results
+
+    try {
+      console.log(`🔍 Fetching book details for barcode: ${barcode}`);
+      const response = await fetch(`/api/book?barcode=${barcode}`);
+
+      // Log raw response before parsing
+      console.log("🔄 Raw Response:", response);
+
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server did not return JSON! Possible error page.");
+      }
+
+      const data = await response.json();
+      console.log("📄 JSON Response:", data);
+
+      if (!data || data.error) {
+        throw new Error(data.error || "Book not found.");
+      }
+
+      setBookDetails(data);
+    } catch (err) {
+      console.error("⚠️ Fetch error:", err.message);
+      setError(err.message);
+    }
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
+    //fetchBookDetails(barcode);
     router.push(`/${barcode}`);
   };
 
@@ -114,6 +153,25 @@ export default function ScanPage() {
           Search
         </button>
       </form>
+
+      {/* 📚 Display Book Details if Available */}
+      {bookDetails && (
+        <div className="mt-4 p-4 bg-white shadow-md rounded-lg text-center">
+          <h2 className="text-lg font-bold">{bookDetails.title}</h2>
+          <p className="text-sm text-gray-600">
+            <strong>Barcode:</strong> {bookDetails.barcode}
+          </p>
+          <p className="text-sm text-gray-600">
+            <strong>Call Number:</strong> {bookDetails.callnumber}
+          </p>
+          <p className="text-sm text-gray-600">
+            <strong>Location:</strong> {bookDetails.location}
+          </p>
+          <p className="text-sm text-gray-600">
+            <strong>Status:</strong> {bookDetails.status}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
