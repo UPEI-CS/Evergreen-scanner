@@ -7,9 +7,19 @@ import Webcam from "react-webcam";
 
 export default function ScanPage() {
   const [barcode, setBarcode] = useState("");
+  const [bookDetails, setBookDetails] = useState(null);
+  const [inputBarcode, setInputBarcode] = useState(""); // Temporary state for the input field
   const [error, setError] = useState("");
   const webcamRef = useRef(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (barcode) {
+      // Fetch book details when barcode is set
+      //fetchBookDetails(barcode);
+      router.push(`/${barcode}`);
+    }
+  }, [barcode]);
 
   useEffect(() => {
     if (webcamRef.current) {
@@ -40,8 +50,7 @@ export default function ScanPage() {
         },
         locate: true,
         area: {
-          // Define a smaller scanning area within the red box
-          top: "40%", // Reduce scanning area to focus on the red box
+          top: "40%",
           right: "20%",
           left: "20%",
           bottom: "60%",
@@ -57,21 +66,66 @@ export default function ScanPage() {
     );
 
     Quagga.onDetected((data) => {
-      if (
-        data.codeResult &&
-        data.codeResult.code &&
-        data.codeResult.decodedCodes.length > 5
-      ) {
-        console.log("Barcode detected:", data.codeResult.code);
+      if (data.codeResult && data.codeResult.code) {
+        console.log("✅ Barcode detected:", data.codeResult.code);
         setBarcode(data.codeResult.code);
         Quagga.stop();
       }
     });
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    router.push(`/${barcode}`);
+  const fetchBookDetails = async () => {
+    setError(""); // Reset errors
+    setBookDetails(null); // Clear previous results
+
+    try {
+      console.log(`🔍 Fetching book details for barcode: ${barcode}`);
+      const response = await fetch(`/api/book?barcode=${barcode}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("📄 JSON Response:", data);
+
+      if (!data || data.error) {
+        throw new Error(data.error || "Book not found.");
+      }
+
+      setBookDetails(data);
+    } catch (err) {
+      console.error("⚠️ Fetch error:", err.message);
+      setError(err.message);
+    }
+  };
+
+  // const handleSearchSubmit = (e) => {
+  //   e.preventDefault();
+  //   //fetchBookDetails(); // Fetch the book details only when the button is clicked
+  //   router.push(`/${barcode}`); // Navigate to the barcode page
+  // };
+
+  const handleSearchSubmit = async (e) => {
+    e.preventDefault(); // Prevent form default submit behavior
+    if (!inputBarcode) {
+      setError("Please enter a barcode."); // Handle empty input
+      return;
+    }
+    setBarcode(inputBarcode); // Set the barcode only when form is submitted
+    setError(""); // Reset any previous errors
+    setError(""); // Clear any previous error
+
+    try {
+      console.log(`Fetching details for barcode: ${inputBarcode}`);
+
+      // Simulate the fetching process
+      // You can replace this with an actual fetch call
+      router.push(`/${inputBarcode}`); // Navigate to book details page or wherever
+    } catch (err) {
+      setError("Failed to fetch book details.");
+      console.error(err);
+    }
   };
 
   return (
@@ -94,19 +148,17 @@ export default function ScanPage() {
       <p className="text-gray-600 my-2">Or</p>
 
       <form
-        onSubmit={handleSearch}
+        onSubmit={handleSearchSubmit} // Use the form submit handler here
         className="flex flex-col items-center w-full max-w-md"
       >
         <input
           type="text"
-          value={barcode}
-          onChange={(e) => setBarcode(e.target.value)}
+          value={inputBarcode}
+          onChange={(e) => setInputBarcode(e.target.value)}
           placeholder="Enter Barcode"
           className="w-full p-2 border rounded-lg text-center mb-2"
         />
-
         {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
-
         <button
           type="submit"
           className="bg-green-800 text-white px-6 py-2 rounded-lg shadow-md w-full max-w-xs"
@@ -114,6 +166,25 @@ export default function ScanPage() {
           Search
         </button>
       </form>
+
+      {/* 📚 Display Book Details if Available */}
+      {bookDetails && (
+        <div className="mt-4 p-4 bg-white shadow-md rounded-lg text-center">
+          <h2 className="text-lg font-bold">{bookDetails.title}</h2>
+          <p className="text-sm text-gray-600">
+            <strong>Barcode:</strong> {bookDetails.barcode}
+          </p>
+          <p className="text-sm text-gray-600">
+            <strong>Call Number:</strong> {bookDetails.callnumber}
+          </p>
+          <p className="text-sm text-gray-600">
+            <strong>Location:</strong> {bookDetails.location}
+          </p>
+          <p className="text-sm text-gray-600">
+            <strong>Status:</strong> {bookDetails.status}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

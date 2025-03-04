@@ -14,6 +14,7 @@ export default function ScanPage() {
 
   useEffect(() => {
     if (barcode) {
+      // Fetch book details when barcode is set
       //fetchBookDetails(barcode);
       router.push(`/${barcode}`);
     }
@@ -64,11 +65,7 @@ export default function ScanPage() {
     );
 
     Quagga.onDetected((data) => {
-      if (
-        data.codeResult &&
-        data.codeResult.code &&
-        data.codeResult.decodedCodes.length > 5
-      ) {
+      if (data.codeResult && data.codeResult.code) {
         console.log("✅ Barcode detected:", data.codeResult.code);
         setBarcode(data.codeResult.code);
         Quagga.stop();
@@ -84,13 +81,8 @@ export default function ScanPage() {
       console.log(`🔍 Fetching book details for barcode: ${barcode}`);
       const response = await fetch(`/api/book?barcode=${barcode}`);
 
-      // Log raw response before parsing
-      console.log("🔄 Raw Response:", response);
-
-      // Check if response is JSON
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Server did not return JSON! Possible error page.");
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
       const data = await response.json();
@@ -105,12 +97,6 @@ export default function ScanPage() {
       console.error("⚠️ Fetch error:", err.message);
       setError(err.message);
     }
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    //fetchBookDetails(barcode);
-    router.push(`/${barcode}`);
   };
 
   return (
@@ -133,7 +119,10 @@ export default function ScanPage() {
       <p className="text-gray-600 my-2">Or</p>
 
       <form
-        onSubmit={handleSearch}
+        onSubmit={(e) => {
+          e.preventDefault();
+          router.push(`/${barcode}`);
+        }}
         className="flex flex-col items-center w-full max-w-md"
       >
         <input
@@ -143,9 +132,7 @@ export default function ScanPage() {
           placeholder="Enter Barcode"
           className="w-full p-2 border rounded-lg text-center mb-2"
         />
-
         {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
-
         <button
           type="submit"
           className="bg-green-800 text-white px-6 py-2 rounded-lg shadow-md w-full max-w-xs"
