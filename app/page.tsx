@@ -1,5 +1,8 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Camera, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Quagga from "quagga";
 import React, { useEffect, useRef, useState } from "react";
@@ -10,22 +13,32 @@ export default function ScanPage() {
   const [bookDetails, setBookDetails] = useState(null);
   const [inputBarcode, setInputBarcode] = useState(""); // Temporary state for the input field
   const [error, setError] = useState("");
+  const [cameraPermissionDenied, setCameraPermissionDenied] = useState(false);
   const webcamRef = useRef(null);
   const router = useRouter();
 
   useEffect(() => {
     if (barcode) {
-      // Fetch book details when barcode is set
-      //fetchBookDetails(barcode);
       router.push(`/${barcode}`);
     }
   }, [barcode]);
 
   useEffect(() => {
     if (webcamRef.current) {
-      startBarcodeScanner();
+      checkCameraPermission();
     }
   }, []);
+
+  const checkCameraPermission = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      stream.getTracks().forEach((track) => track.stop()); // Stop the stream after checking
+      startBarcodeScanner();
+    } catch (err) {
+      setCameraPermissionDenied(true);
+      console.error("Camera permission denied:", err);
+    }
+  };
 
   const startBarcodeScanner = () => {
     Quagga.init(
@@ -74,32 +87,6 @@ export default function ScanPage() {
     });
   };
 
-  const fetchBookDetails = async () => {
-    setError(""); // Reset errors
-    setBookDetails(null); // Clear previous results
-
-    try {
-      console.log(`🔍 Fetching book details for barcode: ${barcode}`);
-      const response = await fetch(`/api/book?barcode=${barcode}`);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("📄 JSON Response:", data);
-
-      if (!data || data.error) {
-        throw new Error(data.error || "Book not found.");
-      }
-
-      setBookDetails(data);
-    } catch (err) {
-      console.error("⚠️ Fetch error:", err.message);
-      setError(err.message);
-    }
-  };
-
   const handleSearchSubmit = async (e) => {
     e.preventDefault(); // Prevent form default submit behavior
     if (!inputBarcode) {
@@ -108,13 +95,9 @@ export default function ScanPage() {
     }
     setBarcode(inputBarcode); // Set the barcode only when form is submitted
     setError(""); // Reset any previous errors
-    setError(""); // Clear any previous error
 
     try {
       console.log(`Fetching details for barcode: ${inputBarcode}`);
-
-      // Simulate the fetching process
-      // You can replace this with an actual fetch call
       router.push(`/${inputBarcode}`); // Navigate to book details page or wherever
     } catch (err) {
       setError("Failed to fetch book details.");
@@ -123,62 +106,86 @@ export default function ScanPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <h1 className="text-2xl md:text-3xl font-bold text-green-800 mb-4 text-center">
-        Evergreen Book Scanner
-      </h1>
-
-      <div className="relative w-full max-w-sm aspect-[4/3] bg-black rounded-lg overflow-hidden shadow-lg mb-4">
-        <Webcam
-          ref={webcamRef}
-          className="w-full h-full"
-          screenshotFormat="image/jpeg"
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-2/3 h-16 border-4 border-red-500 rounded-lg"></div>
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 dark:from-slate-900 dark:to-slate-800">
+      <header className="bg-white dark:bg-slate-950 shadow-sm">
+        <div className="container mx-auto px-4 py-4 flex items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="mr-2"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-xl font-bold text-blue-700 dark:text-blue-400">
+            Evergreen Book Scanner
+          </h1>
         </div>
-      </div>
+      </header>
 
-      <p className="text-gray-600 my-2">Or</p>
+      <main className="flex-1 container mx-auto px-4 py-6 flex flex-col">
+        {cameraPermissionDenied ? (
+          <div className="bg-yellow-100 text-yellow-800 p-4 rounded-md mb-4">
+            <p className="text-center">
+              Please enable camera access to use the barcode scanner.
+            </p>
+          </div>
+        ) : (
+          <Card className="w-full max-w-md mx-auto mb-6">
+            <CardContent className="p-0 relative overflow-hidden rounded-lg aspect-[4/3]">
+              <Webcam
+                ref={webcamRef}
+                className="w-full h-full"
+                screenshotFormat="image/jpeg"
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-2/3 h-16 border-4 border-red-500 rounded-lg"></div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-      <form
-        onSubmit={handleSearchSubmit} // Use the form submit handler here
-        className="flex flex-col items-center w-full max-w-md"
-      >
-        <input
-          type="text"
-          value={inputBarcode}
-          onChange={(e) => setInputBarcode(e.target.value)}
-          placeholder="Enter Barcode"
-          className="w-full p-2 border rounded-lg text-center mb-2"
-        />
-        {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
-        <button
-          type="submit"
-          className="bg-green-800 text-white px-6 py-2 rounded-lg shadow-md w-full max-w-xs"
+        <p className="text-center text-gray-600 dark:text-slate-400 my-2">Or</p>
+
+        <form
+          onSubmit={handleSearchSubmit}
+          className="w-full max-w-md mx-auto flex flex-col items-center mb-6"
         >
-          Search
-        </button>
-      </form>
+          <input
+            type="text"
+            value={inputBarcode}
+            onChange={(e) => setInputBarcode(e.target.value)}
+            placeholder="Enter Barcode"
+            className="w-full p-2 border rounded-lg text-center mb-2"
+          />
+          {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
+          <Button
+            type="submit"
+            className="w-full py-6 text-lg bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+          >
+            <Camera className="mr-2 h-5 w-5" />
+            Search
+          </Button>
+        </form>
 
-      {/* 📚 Display Book Details if Available */}
-      {bookDetails && (
-        <div className="mt-4 p-4 bg-white shadow-md rounded-lg text-center">
-          <h2 className="text-lg font-bold">{bookDetails.title}</h2>
-          <p className="text-sm text-gray-600">
-            <strong>Barcode:</strong> {bookDetails.barcode}
-          </p>
-          <p className="text-sm text-gray-600">
-            <strong>Call Number:</strong> {bookDetails.callnumber}
-          </p>
-          <p className="text-sm text-gray-600">
-            <strong>Location:</strong> {bookDetails.location}
-          </p>
-          <p className="text-sm text-gray-600">
-            <strong>Status:</strong> {bookDetails.status}
-          </p>
-        </div>
-      )}
+        {bookDetails && (
+          <div className="mt-4 p-4 bg-white shadow-md rounded-lg text-center">
+            <h2 className="text-lg font-bold">{bookDetails.title}</h2>
+            <p className="text-sm text-gray-600">
+              <strong>Barcode:</strong> {bookDetails.barcode}
+            </p>
+            <p className="text-sm text-gray-600">
+              <strong>Call Number:</strong> {bookDetails.callnumber}
+            </p>
+            <p className="text-sm text-gray-600">
+              <strong>Location:</strong> {bookDetails.location}
+            </p>
+            <p className="text-sm text-gray-600">
+              <strong>Status:</strong> {bookDetails.status}
+            </p>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
