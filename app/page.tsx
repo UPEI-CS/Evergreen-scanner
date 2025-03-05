@@ -5,6 +5,7 @@
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Quagga from "quagga";
@@ -105,7 +106,7 @@ export default function ScanPage() {
           onSubmit={handleSearchSubmit}
           className="flex flex-col items-center w-full max-w-md"
         >
-          <input
+          <Input
             type="text"
             value={inputBarcode}
             onChange={(e) => setInputBarcode(e.target.value)}

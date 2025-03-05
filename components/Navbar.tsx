@@ -21,10 +21,10 @@ export default function Navbar() {
     <header className="bg-white dark:bg-slate-950 shadow-sm">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <ScanBarcodeIcon
-          className="h-10 w-10 text-blue-700 cursor-pointer"
+          className="h-10 w-10 text-blue-600 cursor-pointer"
           onClick={handleScanIconClick}
         />
-        <h1 className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+        <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">
           Evergreen Book Scanner
         </h1>
         <DropdownMenu>
