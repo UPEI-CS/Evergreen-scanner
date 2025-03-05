@@ -16,17 +16,19 @@ export default function ScanPage() {
   const [inputBarcode, setInputBarcode] = useState("");
   const [error, setError] = useState("");
   const [cameraError, setCameraError] = useState("");
-  const [loading, setLoading] = useState(false); // New loading state
+  const [loading, setLoading] = useState(false);
   const webcamRef = useRef(null);
   const router = useRouter();
 
+  // Navigate to book details page on barcode scan
   useEffect(() => {
     if (barcode) {
-      setLoading(true); // Start loading when barcode is set
+      setLoading(true);
       router.push(`/${barcode}`);
     }
-  }, [barcode]);
+  }, [barcode, router]);
 
+  // Request camera access and start barcode scanner
   useEffect(() => {
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: "environment" } })
@@ -34,8 +36,9 @@ export default function ScanPage() {
       .catch(() =>
         setCameraError("Camera access denied. Please allow camera permissions.")
       );
-  }, []);
+  });
 
+  // Initialize and start Quagga barcode scanner
   const startBarcodeScanner = () => {
     if (!webcamRef.current) return;
     Quagga.init(
@@ -73,28 +76,36 @@ export default function ScanPage() {
     });
   };
 
+  // Handle manual barcode input submission
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (!inputBarcode) {
       setError("Please enter a barcode.");
       return;
     }
-    setLoading(true); // Start loading when form is submitted
+    setLoading(true);
     setBarcode(inputBarcode);
     router.push(`/${inputBarcode}`);
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 dark:from-slate-900 dark:to-slate-800">
-      <Navbar /> {/* Add Navbar component here */}
-      <main className="flex-1 container mx-auto px-4 py-6 flex flex-col items-center">
+    // Main container
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-blue-100 dark:from-slate-900 dark:to-slate-800">
+      <Navbar />
+      {/* Main content area */}
+      <main className="flex-1 flex flex-col items-center justify-center py-6 px-4">
+        {" "}
+        {/* Added px-4 for padding */}
+        {/* Webcam card */}
         <Card className="w-full max-w-md mx-auto mb-6">
           <CardContent className="p-0 relative overflow-hidden rounded-lg aspect-[4/3]">
             {cameraError ? (
+              // Camera error message
               <div className="w-full h-full flex items-center justify-center bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                 {cameraError}
               </div>
             ) : (
+              // Webcam feed and loading indicator
               <div className="relative w-full h-full">
                 <Webcam ref={webcamRef} className="w-full h-full" />
                 {loading && (
@@ -106,10 +117,11 @@ export default function ScanPage() {
             )}
           </CardContent>
         </Card>
-
-        <p className="text-gray-600 dark:text-gray-300 my-2">Or</p>
-
-        {/* Barcode Input Form */}
+        {/* Separator */}
+        <p className="text-gray-600 dark:text-gray-300 my-2 font-semibold">
+          Or
+        </p>
+        {/* Manual barcode input form */}
         <form
           onSubmit={handleSearchSubmit}
           className="flex flex-col items-center w-full max-w-md"
@@ -121,14 +133,16 @@ export default function ScanPage() {
             placeholder="Enter Barcode"
             className="w-full p-2 border rounded-lg text-center mb-2 dark:bg-gray-800 dark:text-white"
           />
+          {/* Error message */}
           {error && (
             <p className="text-red-600 dark:text-red-400 text-sm mb-2">
               {error}
             </p>
           )}
+          {/* Submit button */}
           <Button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 font-semibold"
           >
             {loading ? (
               <Loader2 className="animate-spin h-5 w-5 mr-2" />

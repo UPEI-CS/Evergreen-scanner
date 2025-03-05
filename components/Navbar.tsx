@@ -11,26 +11,29 @@ import { LogOut, ScanBarcodeIcon, Settings, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function Navbar() {
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter();
 
   const handleScanIconClick = () => {
-    router.push("/"); // Navigate to the main page
+    router.push("/");
   };
 
   return (
     <header className="bg-white dark:bg-slate-950 shadow-sm">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <ScanBarcodeIcon
-          className="h-10 w-10 text-blue-600 cursor-pointer"
-          onClick={handleScanIconClick}
-        />
-        <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="flex items-center">
+          <ScanBarcodeIcon
+            className="h-8 w-8 text-blue-600 cursor-pointer"
+            onClick={handleScanIconClick}
+          />
+        </div>
+        <h1 className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 flex-grow text-center">
+          {/* Responsive title size */}
           Evergreen Book Scanner
         </h1>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
-              <User className="h-8 w-8" />
+              <User className="h-6 w-6" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
