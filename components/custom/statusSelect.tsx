@@ -1,5 +1,5 @@
 "use client";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -39,12 +39,26 @@ export default function StatusSelect({ status }: { status: string }) {
             <SelectValue placeholder=" Select Status" />
           </SelectTrigger>
           <SelectContent className="rounded-xl bg-white text-blue-600 font-semibold">
-            <SelectItem value="Available">Available</SelectItem>
-            <SelectItem value="Lost">Lost</SelectItem>
-            <SelectItem value="Damaged">Damaged</SelectItem>
-            <SelectItem value="Missing">Missing</SelectItem>
-            <SelectItem value="Discard/Weed">Discard/Weed</SelectItem>
-            <SelectItem value="Checked Out">Checked Out</SelectItem>
+            <SelectItem value="Available">
+              <Badge variant="success">Available</Badge>
+            </SelectItem>
+            <SelectItem value="Checked Out">
+              <Badge variant="checkedout">Checked Out</Badge>
+            </SelectItem>
+            <SelectItem value="Discard/Weed">
+              <Badge variant="discard">Discard/Weed</Badge>{" "}
+              {/* Using outline variant */}
+            </SelectItem>
+            <SelectItem value="Missing">
+              <Badge variant="missing">Missing</Badge>{" "}
+              {/* Using outline variant */}
+            </SelectItem>
+            <SelectItem value="Damaged">
+              <Badge variant="damaged">Damaged</Badge>
+            </SelectItem>
+            <SelectItem value="Lost">
+              <Badge variant="lost">Lost</Badge>
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
