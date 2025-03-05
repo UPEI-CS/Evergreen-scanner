@@ -1,12 +1,10 @@
-// pages/scanPage.js or wherever your ScanPage component is
-
 "use client";
 
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Quagga from "quagga";
 import React, { useEffect, useRef, useState } from "react";
@@ -18,11 +16,13 @@ export default function ScanPage() {
   const [inputBarcode, setInputBarcode] = useState("");
   const [error, setError] = useState("");
   const [cameraError, setCameraError] = useState("");
+  const [loading, setLoading] = useState(false); // New loading state
   const webcamRef = useRef(null);
   const router = useRouter();
 
   useEffect(() => {
     if (barcode) {
+      setLoading(true); // Start loading when barcode is set
       router.push(`/${barcode}`);
     }
   }, [barcode]);
@@ -79,6 +79,7 @@ export default function ScanPage() {
       setError("Please enter a barcode.");
       return;
     }
+    setLoading(true); // Start loading when form is submitted
     setBarcode(inputBarcode);
     router.push(`/${inputBarcode}`);
   };
@@ -94,7 +95,14 @@ export default function ScanPage() {
                 {cameraError}
               </div>
             ) : (
-              <Webcam ref={webcamRef} className="w-full h-full" />
+              <div className="relative w-full h-full">
+                <Webcam ref={webcamRef} className="w-full h-full" />
+                {loading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-opacity-50 bg-gray-800">
+                    <Loader2 className="animate-spin h-16 w-16 text-white" />
+                  </div>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -122,7 +130,11 @@ export default function ScanPage() {
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
           >
-            Search
+            {loading ? (
+              <Loader2 className="animate-spin h-5 w-5 mr-2" />
+            ) : (
+              "Search"
+            )}
             <Search className="mr-2 h-5 w-5" />
           </Button>
         </form>
