@@ -43,9 +43,5 @@ export default async function BookPage({
     circulationModifier: circulationModifier,
     status: status,
   };
-  return (
-    <section className="h-dvh flex justify-center mt-10">
-      <ItemDisplay iteminfo={itemInfo} />
-    </section>
-  );
+  return <ItemDisplay iteminfo={itemInfo} />;
 }
