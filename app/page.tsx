@@ -100,12 +100,6 @@ export default function ScanPage() {
     }
   };
 
-  // const handleSearchSubmit = (e) => {
-  //   e.preventDefault();
-  //   //fetchBookDetails(); // Fetch the book details only when the button is clicked
-  //   router.push(`/${barcode}`); // Navigate to the barcode page
-  // };
-
   const handleSearchSubmit = async (e) => {
     e.preventDefault(); // Prevent form default submit behavior
     if (!inputBarcode) {
