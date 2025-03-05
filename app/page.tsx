@@ -71,7 +71,9 @@ export default function ScanPage() {
     Quagga.onDetected((data) => {
       if (data.codeResult?.code) {
         setBarcode(data.codeResult.code);
+        setLoading(true);
         Quagga.stop();
+        router.push(`/${data.codeResult.code}`);
       }
     });
   };
@@ -94,8 +96,6 @@ export default function ScanPage() {
       <Navbar />
       {/* Main content area */}
       <main className="flex-1 flex flex-col items-center justify-center py-6 px-4">
-        {" "}
-        {/* Added px-4 for padding */}
         {/* Webcam card */}
         <Card className="w-full max-w-md mx-auto mb-6">
           <CardContent className="p-0 relative overflow-hidden rounded-lg aspect-[4/3]">
@@ -109,8 +109,10 @@ export default function ScanPage() {
               <div className="relative w-full h-full">
                 <Webcam ref={webcamRef} className="w-full h-full" />
                 {loading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-opacity-50 bg-gray-800">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-opacity-50 bg-gray-800">
                     <Loader2 className="animate-spin h-16 w-16 text-white" />
+                    <p className="text-white mt-2">Processing...</p>{" "}
+                    {/* Added "Processing..." text */}
                   </div>
                 )}
               </div>
@@ -131,7 +133,7 @@ export default function ScanPage() {
             value={inputBarcode}
             onChange={(e) => setInputBarcode(e.target.value)}
             placeholder="Enter Barcode"
-            className="w-full p-2 border rounded-lg text-center mb-2 dark:bg-gray-800 dark:text-white"
+            className="w-full p-2 border rounded-lg text-center mb-2 dark:bg-gray-800 dark:text-white font-semibold"
           />
           {/* Error message */}
           {error && (
@@ -147,9 +149,11 @@ export default function ScanPage() {
             {loading ? (
               <Loader2 className="animate-spin h-5 w-5 mr-2" />
             ) : (
-              "Search"
+              <>
+                <Search className="mr-2 h-5 w-5" />
+                Search
+              </>
             )}
-            <Search className="mr-2 h-5 w-5" />
           </Button>
         </form>
       </main>
