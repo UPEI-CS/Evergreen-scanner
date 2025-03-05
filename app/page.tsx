@@ -1,14 +1,11 @@
+// pages/scanPage.js or wherever your ScanPage component is
+
 "use client";
 
+import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { LogOut, Settings, User } from "lucide-react";
+import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Quagga from "quagga";
 import React, { useEffect, useRef, useState } from "react";
@@ -87,30 +84,7 @@ export default function ScanPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 dark:from-slate-900 dark:to-slate-800">
-      {/* Header with Profile & Settings Dropdown */}
-      <header className="bg-white dark:bg-slate-950 shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-blue-700 dark:text-blue-400">
-            Evergreen Book Scanner
-          </h1>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <User className="h-6 w-6" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" /> Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <LogOut className="mr-2 h-4 w-4" /> Log Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </header>
-
+      <Navbar /> {/* Add Navbar component here */}
       <main className="flex-1 container mx-auto px-4 py-6 flex flex-col items-center">
         <Card className="w-full max-w-md mx-auto mb-6">
           <CardContent className="p-0 relative overflow-hidden rounded-lg aspect-[4/3]">
@@ -148,6 +122,7 @@ export default function ScanPage() {
             className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
           >
             Search
+            <Search className="mr-2 h-5 w-5" />
           </Button>
         </form>
       </main>
