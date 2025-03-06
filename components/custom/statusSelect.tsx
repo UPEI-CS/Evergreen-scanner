@@ -1,7 +1,5 @@
 "use client";
-import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -9,12 +7,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Toaster } from "@/components/ui/sonner";
+import * as React from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
-export default function statusSelect({ status }: { status: string }) {
+export default function StatusSelect({ status, disabled = false }: { status: string, disabled?: boolean }) {
   const [selectedStatus, setSelectedStatus] = useState(status);
-
   const [isLoading, setIsLoading] = React.useState(false);
 
   const updateItem = () => {
@@ -23,31 +21,49 @@ export default function statusSelect({ status }: { status: string }) {
     setTimeout(() => {
       setIsLoading(false);
     }, 2000);
-    //update book status api function here
-
   };
 
-  return (
-    <div className=" space-y-5 grid">
+  const handleStatusChange = (value: string) => {
+    setSelectedStatus(value);
+    toast.success(`Status updated to ${value}`);
+  };
 
-      <div className="w-full">
-        <Select onValueChange={setSelectedStatus}>
-          <SelectTrigger
-            disabled={isLoading}
-            className="text-center shadow-md bg-emerald-700 text-white font-semibold rounded-full"
-          >
-            <SelectValue placeholder=" Change Status..." />
-          </SelectTrigger>
-          <SelectContent className="rounded-xl bg-emerald-700 text-white font-semibold">
-            <SelectItem value="Available">Available</SelectItem>
-            <SelectItem value="Lost">Lost</SelectItem>
-            <SelectItem value="Damaged">Damaged</SelectItem>
-            <SelectItem value="Missing">Missing</SelectItem>
-            <SelectItem value="Discard/Weed">Discard/Weed</SelectItem>
-            <SelectItem value="Checked Out">Checked Out</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+  const getBadgeVariant = (status: string) => {
+    switch (status) {
+      case "Available":
+        return "success";
+        
+    }
+  }
+
+  return (
+    <Select onValueChange={handleStatusChange} disabled={disabled || isLoading} value={selectedStatus}>
+      <SelectTrigger className ="focus:ring-0">
+        <SelectValue >{selectedStatus}</SelectValue>
+      </SelectTrigger>
+      <SelectContent className="rounded-xl bg-white text-blue-600 font-semibold">
+        <SelectItem value="Available">
+          <Badge variant="success">Available</Badge>
+        </SelectItem>
+        <SelectItem value="Checked Out">
+          <Badge variant="checkedout">Checked Out</Badge>
+        </SelectItem>
+        <SelectItem value="Discard/Weed">
+          <Badge variant="discard">Discard/Weed</Badge>
+        </SelectItem>
+        <SelectItem value="Missing">
+          <Badge variant="missing">Missing</Badge>
+        </SelectItem>
+        <SelectItem value="Damaged">
+          <Badge variant="damaged">Damaged</Badge>
+        </SelectItem>
+        <SelectItem value="Lost">
+          <Badge variant="lost">Lost</Badge>
+        </SelectItem>
+        <SelectItem value="Unknown">
+          <Badge variant="default">Unknown</Badge>
+        </SelectItem>
+      </SelectContent>
+    </Select>
   );
 }

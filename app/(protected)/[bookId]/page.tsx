@@ -1,23 +1,15 @@
 import ItemDisplay, { ItemInfo } from "@/components/custom/itemDisplay";
 import { client } from "@/lib/eg-client";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
-export default async function BookPage({
-  params,
-}: {
-  params: Promise<{ bookId: string }>;
-}) {
-  const itemID = (await params).bookId;
-  const cookieStore = await cookies();
-  const authToken = cookieStore.get("EG_AUTH_TOKEN")?.value;
-  if (!authToken) {
-    throw new Error("Unauthorized");
-  }
+const getItemInfo = cache(async (itemID: string, authToken: string) => {
+
   const { data, error } = await client
     .pcrud(authToken)
     .from("acp")
     .where({
-      id: itemID,
+      barcode: itemID,
     })
     .flesh(3)
     .fleshFields({
@@ -43,9 +35,39 @@ export default async function BookPage({
     circulationModifier: circulationModifier,
     status: status,
   };
-  return (
-    <section className="h-dvh flex justify-center mt-10">
-      <ItemDisplay iteminfo={itemInfo} />
-    </section>
-  );
+  return itemInfo;
+});
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ bookId: string }>;
+}) {
+  const resolvedParams = await params;
+  const itemID = resolvedParams.bookId;
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get("EG_AUTH_TOKEN")?.value;
+  if (!authToken) {
+    throw new Error("Unauthorized");
+  }
+  const itemInfo = await getItemInfo(itemID, authToken);
+  return {
+    title: `Item Title: ${itemInfo.title}`,
+  };
+}
+
+export default async function BookPage({
+  params,
+}: {
+  params: Promise<{ bookId: string }>;
+}) {
+  const resolvedParams = await params;
+  const itemID = resolvedParams.bookId;
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get("EG_AUTH_TOKEN")?.value;
+  if (!authToken) {
+    throw new Error("Unauthorized");
+  }
+  const itemInfo = await getItemInfo(itemID, authToken);
+  return <ItemDisplay iteminfo={itemInfo} />;
 }
