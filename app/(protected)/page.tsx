@@ -68,7 +68,7 @@ export default function ScanPage() {
       }
     );
 
-    Quagga.onDetected((data) => {
+    Quagga.onDetected((data: any) => {
       if (data.codeResult?.code) {
         setBarcode(data.codeResult.code);
         setLoading(true);
@@ -79,7 +79,7 @@ export default function ScanPage() {
   };
 
   // Handle manual barcode input submission
-  const handleSearchSubmit = (e) => {
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!inputBarcode) {
       setError("Please enter a barcode.");
@@ -92,10 +92,9 @@ export default function ScanPage() {
 
   return (
     // Main container
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-blue-100 dark:from-slate-900 dark:to-slate-800">
-      <Navbar />
-      {/* Main content area */}
-      <main className="flex-1 flex flex-col items-center justify-center py-6 px-4">
+    <div className="flex flex-col h-full">
+
+      <div className="flex-1 flex flex-col items-center justify-center py-6 px-4">
         {/* Webcam card */}
         <Card className="w-full max-w-md mx-auto mb-6">
           <CardContent className="p-0 relative overflow-hidden rounded-lg aspect-[4/3]">
@@ -156,7 +155,7 @@ export default function ScanPage() {
             )}
           </Button>
         </form>
-      </main>
+      </div>
     </div>
   );
 }
