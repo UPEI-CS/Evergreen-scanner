@@ -27,10 +27,13 @@ export default function Navbar() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
-              <Settings className="mr-2 h-4 w-4" /> Settings
-            </DropdownMenuItem>
-            <DropdownMenuItem>
+            <Link href="settings">
+              <DropdownMenuItem className="cursor-pointer">
+                <Settings className="mr-2 h-4 w-4 cur" />
+                Settings
+              </DropdownMenuItem>
+            </Link>
+            <DropdownMenuItem className="cursor-pointer">
               <LogOut className="mr-2 h-4 w-4" /> Log Out
             </DropdownMenuItem>
           </DropdownMenuContent>

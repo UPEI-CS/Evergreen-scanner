@@ -64,7 +64,7 @@ export default function StatusSelect({
         <Badge variant={getBadgeVariant(selectedStatus)} className="h-3 w-3" />
         <SelectValue>{selectedStatus}</SelectValue>
       </SelectTrigger>
-      <SelectContent className="rounded-xl bg-white">
+      <SelectContent className="rounded-xl bg-white justify-center">
         <SelectItem value="Available">
           <div className="flex items-center gap-2">
             <Badge variant="success" className="h-3 w-3" />
