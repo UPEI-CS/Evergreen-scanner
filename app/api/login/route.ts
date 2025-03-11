@@ -14,7 +14,9 @@ export async function POST(request: Request) {
     password,
     type: "staff",
   });
-  console.log(data, error);
+  console.log(JSON.stringify(data, null, 2))
+  console.log(JSON.stringify(error, null, 2))
+
   if (error || !data) {
     return NextResponse.json({ error: error }, { status: 401 });
   }
