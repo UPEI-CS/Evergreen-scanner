@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { client } from "@/lib/eg-client";
 import type { NextRequest } from "next/server";
 
 /**
@@ -25,7 +26,24 @@ export function middleware(request: NextRequest) {
 
   if (authToken && pathname === "/login") {
     // Redirect authenticated users away from /login
-    console.log("User already logged in. Redirecting to /...");
+    console.log("User already logged in. Checking AuthToken");
+
+    // Check the authtoken and reset the timer is it is still their.
+    client.auth.session
+      .resetTimeout({ authToken })
+      .then((response) => {
+        if (response.error) {
+          // User fails to login send them to the login screen.
+          console.error("Error:", response.error);
+          return NextResponse.redirect(new URL("/login", request.url));
+        } else {
+          console.log("Success:", response.data);
+        }
+      })
+      .catch((err) => console.error("Unexpected Error:", err));
+
+    //console.log("AuthToken Value: " + authToken);
+
     return NextResponse.redirect(new URL("/", request.url));
   }
 
