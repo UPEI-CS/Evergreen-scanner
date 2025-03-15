@@ -31,7 +31,6 @@ export interface PcrudOptions {
  */
 export interface PcrudRequestOptions {
    
-    authoritative?: boolean;
     atomic?: boolean;
     /**
      * If true, returns only IDs instead of full objects

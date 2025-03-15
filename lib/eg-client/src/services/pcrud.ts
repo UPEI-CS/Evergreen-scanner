@@ -1,8 +1,13 @@
-import { IAdapter, ServiceResponse, ServiceResult } from "../types/osrf";
 import {
-  PcrudOptions,
-  PcrudRequestOptions,
-} from "../types";
+  IAdapter,
+  OSRFConnectStatus,
+  OSRFMessage,
+  OSRFMethodException,
+  OSRFResult,
+  ServiceResponse,
+  ServiceResult,
+} from "../types/osrf";
+import { PcrudOptions, PcrudRequestOptions } from "../types";
 import { IdlService } from "./idl";
 import { IdlClassMapping, IdlClassName } from "../types/generated/idl-types";
 
@@ -37,7 +42,11 @@ export class PCrudService<T extends IdlClassName | undefined = undefined> {
   }
 
   from<K extends IdlClassName>(fmClass: K): PCrudService<K> {
-    const newService = new PCrudService<K>(this.adapter, this.authToken, this.idl);
+    const newService = new PCrudService<K>(
+      this.adapter,
+      this.authToken,
+      this.idl
+    );
     newService.currentQuery.fmClass = fmClass;
     return newService;
   }
@@ -62,31 +71,78 @@ export class PCrudService<T extends IdlClassName | undefined = undefined> {
     return this;
   }
 
-  async select(): Promise<ServiceResult<T extends IdlClassName ? IdlClassMapping[T] : never, string>> {
+  async select<O extends PcrudRequestOptions>(
+    reqOpts?: O
+  ): Promise<
+    O extends { idlist: true }
+      ? ServiceResult<number[], string>
+      : ServiceResult<T extends IdlClassName ? IdlClassMapping[T][] : never, string>
+  > {
     const { fmClass, ...rest } = this.currentQuery;
+    const methodType = reqOpts?.idlist ? "id_list" : "search";
+    const isAtomic = reqOpts?.atomic ?? false;
+    const service = "open-ils.pcrud";
+    const method = isAtomic
+      ? `${service}.${methodType}.${fmClass}.atomic`
+      : `${service}.${methodType}.${fmClass}`;
 
-    const [result, status] = await this.adapter.send<ServiceResponse<any>>({
-      service: "open-ils.pcrud",
-      method: `open-ils.pcrud.search.${fmClass}`,
-      params: [this.authToken, ...Object.values(rest)],
+    const params =
+      methodType === "id_list"
+        ? [this.authToken, rest.search, rest.options]
+        : [this.authToken, ...Object.values(rest)];
+
+    const response = await this.adapter.send<ServiceResponse<any>>({
+      service: service,
+      method: method,
+      params: params,
     });
-    if (status.__p.payload.__c === "osrfMethodException") {
+
+    if (response.length === 0) {
       return {
         data: null,
-        error: status.__p.payload.__p.status
+        error: "No data returned from server",
       };
     }
-    if (result.__p.payload.__p.status.toLowerCase() !== "ok") {
+    if (response.length === 1) {
+      const message = response[0] as OSRFMessage<
+        OSRFConnectStatus | OSRFMethodException
+      >;
+      const payload = message.__p.payload;
+
       return {
         data: null,
-        error: result.__p.payload.__p.status
+        error:
+          payload.__c === "osrfConnectStatus"
+            ? "no data returned"
+            : payload.__p.status,
       };
     }
-    const content = result.__p.payload.__p.content.__p;
+    const data = response.slice(0, -1) as OSRFMessage<OSRFResult>[];
+    console.log(data);
+    if (methodType === "id_list") {
+      return {
+        data: data.map((item) => item.__p.payload.__p.content) as number[],
+        error: null,
+      } as O extends { idlist: true }
+        ? ServiceResult<number[], string>
+        : ServiceResult<T extends IdlClassName ? IdlClassMapping[T][] : never, string>;
+    }
+
+    const result = data.map((item) => {
+      console.log(item.__p.payload.__p.content.__p);
+      return this.idl.create<
+        T extends IdlClassName ? IdlClassMapping[T] : never
+      >(fmClass as any, item.__p.payload.__p.content.__p);
+    });
+
+    const typedResult: T extends IdlClassName ? IdlClassMapping[T][] : never =
+      result as any;
+
     return {
-      data: this.idl.create<T extends IdlClassName ? IdlClassMapping[T] : never>(fmClass as any, content),
-      error: null
-    };
+      data: typedResult,
+      error: null,
+    } as O extends { idlist: true }
+      ? ServiceResult<number[], string>
+      : ServiceResult<T extends IdlClassName ? IdlClassMapping[T][] : never, string>;
   }
 }
-

@@ -21,7 +21,7 @@ type RequestFields = Partial<MessageFields> & {
 }
 
 
-export type OSRFMessage<T = OSRFResult<any> | OSRFConnectStatus | OSRFMethod> = {
+export type OSRFMessage<T = OSRFResult<any> | OSRFConnectStatus | OSRFMethod | OSRFMethodException> = {
   __c: 'osrfMessage';
   __p: (T extends OSRFMethod 
     ? RequestFields 
@@ -72,7 +72,7 @@ export interface OpenSRFRequest {
 }
 
 export type ServiceResponse<T> = [
-  OSRFMessage<OSRFResult<T>>,
+  ...Array<OSRFMessage<OSRFResult<T>>>,
   OSRFMessage<OSRFConnectStatus | OSRFMethodException>
 ];
 export interface ServiceResult<T = any, E = any> {
