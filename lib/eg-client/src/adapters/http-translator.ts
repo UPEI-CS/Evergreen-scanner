@@ -7,10 +7,12 @@ import {
   AdapterConfig,
 } from "../types";
 import { IdlService } from "../services/idl";
+import { CircService } from "../services/circ";
 export class HttpTranslator implements IAdapter {
   private authService?: AuthService;
   private pcrudService?: PCrudService;
   private idl: IdlService;
+  private circService?: CircService;
   constructor(private config: AdapterConfig) {
     this.idl = new IdlService();
   }
@@ -27,6 +29,13 @@ export class HttpTranslator implements IAdapter {
       this.pcrudService = new PCrudService(this, authToken, this.idl);
     }
     return this.pcrudService;
+  }
+
+  circ(authToken: string): CircService {
+    if (!this.circService) {
+      this.circService = new CircService(this, authToken);
+    }
+    return this.circService;
   }
   async send<T>(req: OpenSRFRequest): Promise<T> {
     const { service, method, params } = req;
