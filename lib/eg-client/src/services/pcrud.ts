@@ -118,10 +118,13 @@ export class PCrudService<T extends IdlClassName | undefined = undefined> {
       };
     }
     const data = response.slice(0, -1) as OSRFMessage<OSRFResult>[];
-    console.log(data);
+    console.log("DATA", JSON.stringify(data, null, 2));
     if (methodType === "id_list") {
       return {
-        data: data.map((item) => item.__p.payload.__p.content) as number[],
+        data: data.flatMap((item) => {
+          const content = item.__p.payload.__p.content;
+          return Array.isArray(content) ? content : [content];
+        }) as number[],
         error: null,
       } as O extends { idlist: true }
         ? ServiceResult<number[], string>
@@ -129,7 +132,6 @@ export class PCrudService<T extends IdlClassName | undefined = undefined> {
     }
 
     const result = data.map((item) => {
-      console.log(item.__p.payload.__p.content.__p);
       return this.idl.create<
         T extends IdlClassName ? IdlClassMapping[T] : never
       >(fmClass as any, item.__p.payload.__p.content.__p);
