@@ -8,47 +8,15 @@ import {
   OSRFResult,
 } from "../types/osrf";
 
-import { CHECKIN_SUCCESS_CODES, CheckinResponsePayload, CheckinSuccessTextCode } from "../types/circ";
-
-export interface InHouseUseOptions {
-  copyid?: number;
-  barcode?: string;
-  location: number;
-  count?: number;
-  use_time?: string;
-  non_cat_type?: number;
-}
-
-export interface CheckInOptions {
-  barcode?: string;
-  copy_id?: number;
-  force?: boolean;
-  noop?: boolean;
-  void_overdues?: boolean;
-  checkin_time?: string;
-  circ_lib?: number;
-  checkin_workstation?: number;
-}
-
-export interface MarkItemOptions {
-  handle_checkin?: boolean;
-  handle_transit?: boolean;
-  handle_copy_delete_warning?: boolean;
-  handle_last_hold_copy?: boolean;
-  charge_patron?: boolean;
-  charge_amount?: number;
-  note?: string;
-}
-
-export type ItemStatus =
-  | "damaged"
-  | "missing"
-  | "bindery"
-  | "on_order"
-  | "ill"
-  | "cataloging"
-  | "reserves"
-  | "discard";
+import {
+  CHECKIN_SUCCESS_CODES,
+  CheckinResponsePayload,
+  CheckinSuccessTextCode,
+  InHouseUseOptions,
+  CheckInOptions,
+  MarkItemOptions,
+  ManualItemStatus,
+} from "../types/circ";
 
 export class CircService {
   constructor(
@@ -131,17 +99,21 @@ export class CircService {
       };
     }
 
-    const content = response[0] as OSRFMessage<OSRFResult<CheckinResponsePayload>>;
+    const content = response[0] as OSRFMessage<
+      OSRFResult<CheckinResponsePayload>
+    >;
 
     const textcode = content.__p.payload.__p.content.textcode;
-    
-    return CHECKIN_SUCCESS_CODES.includes(textcode as CheckinSuccessTextCode) ? {
-      data: textcode,
-      error: null,
-    } : {
-      data: null,
-      error: textcode,
-    };
+
+    return CHECKIN_SUCCESS_CODES.includes(textcode as CheckinSuccessTextCode)
+      ? {
+          data: textcode,
+          error: null,
+        }
+      : {
+          data: null,
+          error: textcode,
+        };
   }
 
   /**
@@ -153,7 +125,7 @@ export class CircService {
    */
   async markItem(
     copyId: number,
-    status: ItemStatus,
+    status: ManualItemStatus,
     options: MarkItemOptions = {}
   ): Promise<ServiceResult<boolean, string>> {
     const method = `open-ils.circ.mark_item_${status}`;
@@ -182,6 +154,46 @@ export class CircService {
     const result = response[0] as OSRFMessage<OSRFResult<string>>;
     return {
       data: result.__p.payload.__p.content === "1",
+      error: null,
+    };
+  }
+
+  async updateItemInventory(itemIds: number[], wsId?: number) {
+    const method = "open-ils.circ.circulation.update_copy_inventory";
+    const args = {
+      copy_list: itemIds,
+    };
+    const params = wsId ? [this.authToken, args, wsId] : [this.authToken, args];
+    const response = await this.adapter.send<ServiceResponse<any>>({
+      service: "open-ils.circ",
+      method,
+      params,
+    });
+
+    if (response.length === 0) {
+      return {
+        data: null,
+        error: "No response from server",
+      };
+    }
+    if (response.length === 1) {
+      const result = response[0] as OSRFMessage<
+        OSRFConnectStatus | OSRFMethodException
+      >;
+      return {
+        data: null,
+        error: result.__p.payload.__p.status,
+      };
+    }
+
+    const data = response[0] as OSRFMessage<OSRFResult<number[]>>;
+    const content = data.__p.payload.__p.content;
+
+    return {
+      data: {
+        successCount: content[0],
+        failureCount: content[1],
+      },
       error: null,
     };
   }
