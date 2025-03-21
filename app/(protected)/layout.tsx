@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import { SettingsProvider } from "@/hooks/use-settings";
 
 export default function ProtectedLayout({
   children,
@@ -6,11 +7,13 @@ export default function ProtectedLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="flex flex-col min-h-screen ">
-      <Navbar />
-      <div className="flex-1 ">
-        {children}
+    <SettingsProvider>
+      <div className="flex flex-col h-screen overflow-hidden">
+        <Navbar />
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
       </div>
-    </main>
+    </SettingsProvider>
   );
 }
