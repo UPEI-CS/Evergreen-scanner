@@ -1,53 +1,61 @@
-"use client";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { LogOut, ScanBarcodeIcon, Settings, User } from "lucide-react";
 import Link from "next/link";
-import { SettingsDialog } from "./custom/settings-dialog";
-import { useState } from "react";
-export default function Navbar() {
-  const [open, setOpen] = useState(false);
+import { SettingsDialog } from "./custom/settings";
+import { client } from "@/lib/eg-client";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import LogoutButton from "./custom/logout-button";
+import { Separator } from "@/components/ui/separator";
+export default async function Navbar() {
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get("EG_AUTH_TOKEN")?.value;
+  if (!authToken) {
+    redirect("/login");
+  }
+  const { data, error } = await client.auth.session.retrieve({
+    authToken: authToken,
+    returnTime: true,
+  });
+  if (error || !data) {
+    redirect("/login");
+  }
+  const name = data.userobj.first_given_name() || "";
+  const lastname = data.userobj.family_name() || "";
+  const email = data.userobj.email() || "";
   return (
-    <header className="bg-white dark:bg-slate-950 shadow-sm">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex rounded-full p-0">
-          <Link href="/">
-            <ScanBarcodeIcon className="h-10 w-10 text-blue-600 dark:text-blue-400" />
-          </Link>
-        </div>
-        <h1 className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 flex-grow text-center cursor-pointer">
-          Evergreen Scanner
-        </h1>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+    <header className=" shadow-sm">
+      <div className="container mx-auto px-4 py-4 flex items-center justify-end">
+        <Popover>
+          <PopoverTrigger asChild>
             <Button variant="ghost" size="icon">
               <User className="h-10 w-10" />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem 
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpen(true);
-              }}
-              onSelect={(e) => {
-                e.preventDefault();
-              }}
-            >
-              <Settings className="mr-2 h-4 w-4" /> Settings
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <LogOut className="mr-2 h-4 w-4" /> Log Out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-fit p-2">
+            <div className="grid gap-2">
+              <div className="flex items-center gap-1">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="flex flex-col px-2">
+                  <p className="text-sm font-medium">{name}</p>
+                  <p className="text-sm font-medium">{lastname}</p>
+                  <p className="text-xs text-muted-foreground">{email}</p>
+                </div>
+              </div>
+                <Separator orientation="horizontal" className="w-full" />
+              <SettingsDialog />
+              <LogoutButton />
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
-      {open && <SettingsDialog open={open} setOpen={setOpen} />}
     </header>
   );
 }
