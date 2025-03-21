@@ -3,6 +3,7 @@ import { LibraryItem } from "@/components/custom/item-display-reducer";
 import { client } from "@/lib/eg-client";
 import { ItemStatus } from "@/lib/eg-client/src/types";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { cache } from "react";
 
 const getItemInfo = cache(async (itemID: string, authToken: string) => {
@@ -97,8 +98,9 @@ export default async function BookPage({
   const itemID = resolvedParams.bookId;
   const cookieStore = await cookies();
   const authToken = cookieStore.get("EG_AUTH_TOKEN")?.value;
+
   if (!authToken) {
-    throw new Error("Unauthorized");
+    redirect("/");
   }
   const itemInfo = await getItemInfo(itemID, authToken);
   return (

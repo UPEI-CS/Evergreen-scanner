@@ -59,24 +59,9 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-blue-100 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen flex flex-col items-center justify-center ">
       <div className="w-full max-w-md px-4 sm:max-w-lg">
         <Card className="w-full">
-          <CardHeader className="space-y-1 text-center">
-            <div className="flex flex-col items-center">
-              <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full">
-                <BookOpen className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-              </div>
-
-              <CardTitle className="text-2xl font-extrabold mt-2">
-                Library Scanner
-              </CardTitle>
-            </div>
-
-            <p className="text-sm text-gray-500">
-              Enter your credentials to sign in
-            </p>
-          </CardHeader>
 
           <CardContent>
             <Form {...form}>
@@ -94,7 +79,7 @@ export default function Login() {
                         <Input
                           id="username"
                           type="text"
-                          placeholder="Enter your username"
+                          placeholder="Enter your Evergreen username"
                           {...field}
                         />
                       </FormControl>
@@ -113,7 +98,7 @@ export default function Login() {
                         <Input
                           id="password"
                           type="password"
-                          placeholder="Enter your password"
+                          placeholder="Enter your Evergreen password"
                           {...field}
                         />
                       </FormControl>
@@ -130,7 +115,7 @@ export default function Login() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 font-semibold"
+                  className="w-full  font-semibold"
                   disabled={form.formState.isSubmitting}
                 >
                   {form.formState.isSubmitting ? (
@@ -143,13 +128,6 @@ export default function Login() {
             </Form>
           </CardContent>
 
-          <CardFooter className="text-center text-sm text-slate-500 dark:text-slate-400">
-            <div className="w-full">
-              Demo accounts:
-              <br />
-              Username: admin / Password: demo123
-            </div>
-          </CardFooter>
         </Card>
       </div>
     </div>
