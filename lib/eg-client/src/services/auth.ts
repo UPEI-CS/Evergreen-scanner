@@ -9,6 +9,11 @@ import {
   AuthSessionResetResponse,
   ServiceResult,
   LoginPayload,
+  OSRFMessage,
+  OSRFConnectStatus,
+  OSRFMethodException,
+  OSRFResult,
+  AuthContent,
 } from "../types";
 import { AU } from "../types/generated/idl-types";
 import { IdlService } from "./idl";
@@ -24,33 +29,38 @@ export class AuthService {
   async login(
     credentials: AuthCredentials
   ): Promise<ServiceResult<LoginPayload, string>> {
-    const [result, status] = await this.adapter.send<AuthLoginResponse>({
+    const response = await this.adapter.send<AuthLoginResponse>({
       service: "open-ils.auth",
       method: "open-ils.auth.login",
       params: [credentials],
     });
-
-    if (status.__p.payload.__c === "osrfMethodException") {
+    console.log(JSON.stringify(response, null, 2));
+    if(response.length === 0) {
       return {
         data: null,
-        error: status.__p.payload.__p.status,
+        error: "No response from server",
       };
     }
-    if (result.__p.payload.__p.status.toLowerCase() !== "ok") {
+    if(response.length === 1) {
+      const result = response[0] as OSRFMessage<
+        OSRFConnectStatus | OSRFMethodException
+      >;
       return {
         data: null,
-        error: "unknown error",
+        error: result.__p.payload.__p.status,
       };
     }
-    if (result.__p.payload.__p.content.payload === undefined) {
+    const result = response[0] as OSRFMessage<OSRFResult<AuthContent<LoginPayload>>>
+    const content = result.__p.payload.__p.content
+    
+    if(content.textcode !== "SUCCESS") {
       return {
         data: null,
-        error: result.__p.payload.__p.content.textcode,
+        error: content.desc,
       };
     }
-
     return {
-      data: result.__p.payload.__p.content.payload,
+      data: content.payload,
       error: null,
     };
   }
@@ -76,25 +86,38 @@ class SessionService {
     >
   > {
     const { authToken, returnTime, doNotResetSession } = params;
-    const [result, status] = await this.adapter.send<ServiceResponse<any>>({
+    const response = await this.adapter.send<ServiceResponse<any>>({
       service: "open-ils.auth",
       method: "open-ils.auth.session.retrieve",
       params: [authToken, returnTime ? 1 : 0, doNotResetSession ? 1 : 0],
     });
-
-    if (status.__p.payload.__c === "osrfMethodException") {
+    console.log(JSON.stringify(response, null, 2));
+    if(response.length === 0) {
       return {
         data: null,
-        error: status.__p.payload.__p.status,
+        error: "No response from server",
       };
     }
 
-    if (result.__p.payload.__p.status.toLowerCase() !== "ok") {
+    if(response.length === 1) {
+      const result = response[0] as OSRFMessage<
+        OSRFConnectStatus | OSRFMethodException
+      >;
       return {
         data: null,
         error: result.__p.payload.__p.status,
       };
     }
+
+    const result = response[0] as OSRFMessage<OSRFResult<any>>
+    const content = result.__p.payload.__p.content
+    if( 'textcode' in content && 'desc' in content) {
+      return {
+        data: null,
+        error: content.desc,
+      };
+    }
+
 
     if (returnTime) {
       const content = result.__p.payload.__p.content as {
@@ -123,20 +146,31 @@ class SessionService {
   async delete({
     authToken,
   }: Pick<AuthParams, "authToken">): Promise<ServiceResult<string, string>> {
-    const [result, status] = await this.adapter.send<AuthSessionDeleteResponse>(
-      {
-        service: "open-ils.auth",
-        method: "open-ils.auth.session.delete",
-        params: [authToken],
-      }
-    );
-
-    if (status.__p.payload.__c === "osrfMethodException") {
+    const response = await this.adapter.send<AuthSessionDeleteResponse>({
+      service: "open-ils.auth",
+      method: "open-ils.auth.session.delete",
+      params: [authToken],
+    });
+    console.log(response);
+    if (response.length === 0) {
       return {
         data: null,
-        error: status.__p.payload.__p.status,
+        error: "No response from server",
       };
     }
+
+    if (response.length === 1) {
+      const result = response[0] as OSRFMessage<
+        OSRFConnectStatus | OSRFMethodException
+      >;
+      return {
+        data: null,
+        error: result.__p.payload.__p.status,
+      };
+    }
+
+    const result = response[0] as OSRFMessage<OSRFResult<string>>
+
 
     if (result.__p.payload.__p.status.toLowerCase() !== "ok") {
       return {
@@ -158,22 +192,34 @@ class SessionService {
   async resetTimeout({
     authToken,
   }: Pick<AuthParams, "authToken">): Promise<ServiceResult<any, string>> {
-    const [result, status] = await this.adapter.send<AuthSessionResetResponse>({
+    const response = await this.adapter.send<AuthSessionResetResponse>({
       service: "open-ils.auth",
       method: "open-ils.auth.session.reset_timeout",
       params: [authToken],
     });
-
-    if (status.__p.payload.__c === "osrfMethodException") {
+    console.log(response);
+    if (response.length === 0) {
       return {
         data: null,
-        error: status.__p.payload.__p.status,
+        error: "No response from server",
       };
     }
-    if (result.__p.payload.__p.status.toLowerCase() !== "ok") {
+
+    if (response.length === 1) {
+      const result = response[0] as OSRFMessage<
+        OSRFConnectStatus | OSRFMethodException
+      >;
       return {
         data: null,
         error: result.__p.payload.__p.status,
+      };
+    }
+
+    const result = response[0] as OSRFMessage<OSRFResult<AuthContent<number>>>  
+    if (result.__p.payload.__p.status.toLowerCase() !== "ok") {
+      return {
+        data: null,
+        error: result.__p.payload.__p.content.textcode,
       };
     }
 

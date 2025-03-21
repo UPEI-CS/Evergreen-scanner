@@ -28,7 +28,7 @@ export interface AuthCredentials {
 }
 
 /** Base auth response content */
-export interface AuthContent<T = LoginPayload | number> {
+export interface AuthContent<T = LoginPayload | number | undefined> {
   /** Event ID indicating success/failure */
   ilsevent: number;
   /** Text code describing the event */

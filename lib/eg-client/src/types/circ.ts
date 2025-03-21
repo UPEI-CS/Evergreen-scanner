@@ -4,36 +4,43 @@ export type CheckinSuccessTextCode = typeof CHECKIN_SUCCESS_CODES[number];
 export const CHECKIN_ERROR_CODES = ['ASSET_COPY_NOT_FOUND', 'COPY_IN_TRANSIT', 'CIRC_CLAIMS_RETURNED'] as const;
 export type CheckinErrorCodes = typeof CHECKIN_ERROR_CODES[number];
 
-export interface InHouseUseOptions {
-    copyid?: number;
-    barcode?: string;
-    location: number;
-    count?: number;
-    use_time?: string;
-    non_cat_type?: number;
-  }
-  
-  export interface CheckInOptions {
-    barcode?: string;
-    copy_id?: number;
-    force?: boolean;
-    noop?: boolean;
-    void_overdues?: boolean;
-    checkin_time?: string;
-    circ_lib?: number;
-    checkin_workstation?: number;
-  }
-  
-  export interface MarkItemOptions {
-    handle_checkin?: boolean;
-    handle_transit?: boolean;
-    handle_copy_delete_warning?: boolean;
-    handle_last_hold_copy?: boolean;
-    charge_patron?: boolean;
-    charge_amount?: number;
-    note?: string;
-  }
-  
+type InHouseUseOptionsBase = {
+  copyid?: number;
+  barcode?: string;
+  location: number;
+  count?: number;
+  use_time?: string;
+  non_cat_type?: number;
+}
+
+export type InHouseUseOptions = 
+  | (InHouseUseOptionsBase & Required<Pick<InHouseUseOptionsBase, 'copyid'>> & { barcode?: never })
+  | (InHouseUseOptionsBase & Required<Pick<InHouseUseOptionsBase, 'barcode'>> & { copyid?: never });
+
+type CheckInOptionsBase = {
+  copy_id?: number;
+  barcode?: string;
+  force?: boolean;
+  noop?: boolean;
+  void_overdues?: boolean;
+  checkin_time?: string;
+  circ_lib?: number;
+  checkin_workstation?: number;
+}
+
+export type CheckInOptions = 
+  | (CheckInOptionsBase & Required<Pick<CheckInOptionsBase, 'copy_id'>> & { barcode?: never })
+  | (CheckInOptionsBase & Required<Pick<CheckInOptionsBase, 'barcode'>> & { copy_id?: never });
+
+export interface MarkItemOptions {
+  handle_checkin?: boolean;
+  handle_transit?: boolean;
+  handle_copy_delete_warning?: boolean;
+  handle_last_hold_copy?: boolean;
+  charge_patron?: boolean;
+  charge_amount?: number;
+  note?: string;
+}
 
 export interface CheckinResponsePayload {
   desc: string;
@@ -80,14 +87,14 @@ export interface UpdateCopyInventoryResponsePayload {
  */
 export const MANUAL_ITEM_STATUSES = [
   'Damaged',
-  'Missing',
+ // 'Missing',
   'Bindery',
-  'On Order',
+ // 'On Order',
   'ILL',
   'Cataloging',
   'Reserves',
   'Discard',
-  'Missing Pieces'
+//  'Missing Pieces'
 ] as const;
 
 export type ManualItemStatus = typeof MANUAL_ITEM_STATUSES[number];
