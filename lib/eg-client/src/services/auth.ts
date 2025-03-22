@@ -151,7 +151,9 @@ class SessionService {
       method: "open-ils.auth.session.delete",
       params: [authToken],
     });
-    console.log(response);
+
+    console.log(JSON.stringify(response, null, 2));
+
     if (response.length === 0) {
       return {
         data: null,
@@ -191,12 +193,14 @@ class SessionService {
    */
   async resetTimeout({
     authToken,
-  }: Pick<AuthParams, "authToken">): Promise<ServiceResult<any, string>> {
+  }: Pick<AuthParams, "authToken">): Promise<ServiceResult<number, string>> {
+
     const response = await this.adapter.send<AuthSessionResetResponse>({
       service: "open-ils.auth",
       method: "open-ils.auth.session.reset_timeout",
       params: [authToken],
     });
+
     console.log(response);
     if (response.length === 0) {
       return {
@@ -217,9 +221,18 @@ class SessionService {
 
     const result = response[0] as OSRFMessage<OSRFResult<AuthContent<number>>>  
     if (result.__p.payload.__p.status.toLowerCase() !== "ok") {
+
       return {
         data: null,
         error: result.__p.payload.__p.content.textcode,
+      };
+    }
+
+    const result = response[0] as OSRFMessage<OSRFResult<AuthContent<number>>>  
+    if(result.__p.payload.__p.content.textcode !== "SUCCESS") {
+      return {
+        data: null,
+        error: result.__p.payload.__p.content.desc,
       };
     }
 
