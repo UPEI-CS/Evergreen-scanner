@@ -218,16 +218,6 @@ class SessionService {
         error: result.__p.payload.__p.status,
       };
     }
-
-    const result = response[0] as OSRFMessage<OSRFResult<AuthContent<number>>>  
-    if (result.__p.payload.__p.status.toLowerCase() !== "ok") {
-
-      return {
-        data: null,
-        error: result.__p.payload.__p.content.textcode,
-      };
-    }
-
     const result = response[0] as OSRFMessage<OSRFResult<AuthContent<number>>>  
     if(result.__p.payload.__p.content.textcode !== "SUCCESS") {
       return {
