@@ -32,12 +32,5 @@ export async function POST(request: Request) {
     path: "/",
     maxAge: data.authtime,
   });
-  response.cookies.set("EG_AUTH_TIME", data.authtime.toString(), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: data.authtime,
-  });
   return response;
 }
