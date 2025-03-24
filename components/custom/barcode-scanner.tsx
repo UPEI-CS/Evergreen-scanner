@@ -41,7 +41,9 @@ export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
               return;
             }
             console.log("Quagga initialized successfully");
-            Quagga.start();
+            setTimeout(() => {
+              Quagga.start();
+            }, 1000);
           }
         );
 
@@ -90,7 +92,7 @@ export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
             {loading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-opacity-50 bg-gray-800">
                 <Loader2 className="animate-spin h-16 w-16 text-white" />
-                <p className="text-white mt-2">Processing...</p>
+                <p className="text-white mt-2">Processing</p>
               </div>
             )}
           </div>
