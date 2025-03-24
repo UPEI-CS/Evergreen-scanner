@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Library Book Scanner",
+  title: "Evergreen Mobile",
 };
 
 export default function RootLayout({

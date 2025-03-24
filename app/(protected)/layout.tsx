@@ -10,7 +10,7 @@ export default function ProtectedLayout({
     <SettingsProvider>
       <div className="flex flex-col h-screen overflow-hidden">
         <Navbar />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-hidden">
           {children}
         </main>
       </div>
