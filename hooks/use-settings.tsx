@@ -6,11 +6,11 @@ import {
   useState, 
   ReactNode, 
   useEffect,
-  useMemo
+  useMemo,
+  useRef
 } from "react";
 import { ManualItemStatus, MANUAL_ITEM_STATUSES } from "@/lib/eg-client/src/types";
 
-// Use a consistent key that won't change with user login state
 const STORAGE_KEY = "evergreen-device-settings";
 
 export interface Settings {
@@ -19,6 +19,7 @@ export interface Settings {
   updateInventoryDateTime: boolean;
   enableCheckIn: boolean;
   availableStatusChanges: Record<ManualItemStatus, boolean>;
+  loading: boolean;
 }
 
 interface SettingsContextType {
@@ -26,23 +27,17 @@ interface SettingsContextType {
   updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
   toggleStatusChange: (status: ManualItemStatus) => void;
   resetSettings: () => void;
-  
   enableManualItemEntry: boolean;
   setEnableManualItemEntry: (value: boolean) => void;
-  
   recordInHouseUse: boolean;
   setRecordInHouseUse: (value: boolean) => void;
-  
   updateInventoryDateTime: boolean;
   setUpdateInventoryDateTime: (value: boolean) => void;
-  
   enableCheckIn: boolean;
   setEnableCheckIn: (value: boolean) => void;
-  
   isStatusChangeEnabled: (status: ManualItemStatus) => boolean;
-  
-  // Get all enabled status changes
   enabledStatusChanges: ManualItemStatus[];
+  loading: boolean;
 }
 
 
@@ -55,6 +50,7 @@ const defaultSettings: Settings = {
     acc[status] = false;
     return acc;
   }, {} as Record<ManualItemStatus, boolean>),
+  loading: false,
 };
 
 
@@ -62,10 +58,12 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const isInitialMount = useRef(true);
   
-  // Load settings from localStorage on component mount
   useEffect(() => {
     const loadSettings = () => {
+      setIsLoaded(false);
       try {
         const savedSettings = localStorage.getItem(STORAGE_KEY);
         if (savedSettings) {
@@ -76,14 +74,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         console.error("Failed to parse saved settings:", error);
         setSettings(defaultSettings);
       }
+      setIsLoaded(true);
     };
     
-    // Load settings immediately
     loadSettings();
     
-    // Also set up an event listener for storage changes
-    // This helps sync settings across tabs and handles potential
-    // external changes to localStorage
+
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === STORAGE_KEY) {
         loadSettings();
@@ -96,8 +92,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     };
   }, []);
   
-  // Save settings to localStorage whenever they change
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
   }, [settings]);
 
@@ -129,12 +129,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   
   const isStatusChangeEnabled = (status: ManualItemStatus) => settings.availableStatusChanges[status];
   
-  // Calculate all enabled status changes
   const enabledStatusChanges = useMemo(() => {
     return MANUAL_ITEM_STATUSES.filter(status => settings.availableStatusChanges[status]);
   }, [settings.availableStatusChanges]);
 
-  const value = {
+  const value: SettingsContextType = {
     settings,
     updateSetting,
     toggleStatusChange,
@@ -148,7 +147,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     enableCheckIn: settings.enableCheckIn,
     setEnableCheckIn,
     isStatusChangeEnabled,
-    enabledStatusChanges
+    enabledStatusChanges,
+    loading: !isLoaded
   };
 
   return (

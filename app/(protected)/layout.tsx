@@ -1,4 +1,4 @@
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/custom/navbar";
 import { SettingsProvider } from "@/hooks/use-settings";
 
 export default function ProtectedLayout({

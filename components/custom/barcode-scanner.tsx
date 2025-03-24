@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Quagga from "quagga";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, SendHorizonal , Search, Camera, CameraIcon } from "lucide-react";
+import { Loader2, SendHorizonal , Search, Camera, CameraIcon, Loader } from "lucide-react";
 import { useSettings } from "@/hooks/use-settings";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -31,7 +31,7 @@ export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
               },
             },
             decoder: {
-              readers: ["ean_reader", "code_128_reader", "upc_reader"],
+              readers: ["code_39_reader", "i2of5_reader", "codabar_reader"],
             },
           },
           function (err: any) {
@@ -101,18 +101,23 @@ export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
 }
 
 export default function BarcodeScanner() {
-  const { enableManualItemEntry } = useSettings();
+  const { enableManualItemEntry, loading } = useSettings();
   const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
   const router = useRouter();
   const [inputBarcode, setInputBarcode] = useState("");
 
   const handleManualEntry = (e: React.FormEvent) => {
     e.preventDefault();
+    setPending(true);
     if (inputBarcode.trim()) {
       router.push(`/${inputBarcode}`);
     }
+    setPending(false);
   };
-
+  if (loading) {
+    return <div className="h-10 w-full animate-pulse bg-gray-200 dark:bg-gray-800 rounded-md" />;
+  }
   if (enableManualItemEntry) {
     return (
       <div className="w-full">
@@ -136,8 +141,8 @@ export default function BarcodeScanner() {
                 <Camera className="w-4 h-4 text-muted-foreground" />
               </Button>
             </div>
-            <Button type="submit" size="sm"> 
-              <SendHorizonal className="w-4 h-4 text-muted-foreground" />
+            <Button type="submit" size="sm" disabled={pending}> 
+              {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendHorizonal className="w-4 h-4 text-muted-foreground" />}
             </Button>
           </form>
         )}

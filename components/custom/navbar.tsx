@@ -4,13 +4,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { LogOut, ScanBarcodeIcon, Settings, User } from "lucide-react";
-import Link from "next/link";
-import { SettingsDialog } from "./custom/settings";
+import { User } from "lucide-react";
+import { SettingsDialog } from "@/components/custom/settings";
 import { client } from "@/lib/eg-client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import LogoutButton from "./custom/logout-button";
+import LogoutButton from "@/components/custom/logout-button";
 import { Separator } from "@/components/ui/separator";
 export default async function Navbar() {
   const cookieStore = await cookies();
@@ -29,7 +28,7 @@ export default async function Navbar() {
   const lastname = data.userobj.family_name() || "";
   const email = data.userobj.email() || "";
   return (
-    <header className=" shadow-sm">
+    <header>
       <div className="container mx-auto px-4 py-4 flex items-center justify-end">
         <Popover>
           <PopoverTrigger asChild>
