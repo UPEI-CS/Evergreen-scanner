@@ -34,7 +34,7 @@ export class AuthService {
       method: "open-ils.auth.login",
       params: [credentials],
     });
-    console.log(JSON.stringify(response, null, 2));
+
     if(response.length === 0) {
       return {
         data: null,
@@ -91,7 +91,7 @@ class SessionService {
       method: "open-ils.auth.session.retrieve",
       params: [authToken, returnTime ? 1 : 0, doNotResetSession ? 1 : 0],
     });
-    console.log(JSON.stringify(response, null, 2));
+   
     if(response.length === 0) {
       return {
         data: null,
@@ -152,7 +152,6 @@ class SessionService {
       params: [authToken],
     });
 
-    console.log(JSON.stringify(response, null, 2));
 
     if (response.length === 0) {
       return {
@@ -201,7 +200,6 @@ class SessionService {
       params: [authToken],
     });
 
-    console.log(response);
     if (response.length === 0) {
       return {
         data: null,

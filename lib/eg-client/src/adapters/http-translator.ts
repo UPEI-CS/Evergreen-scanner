@@ -39,7 +39,6 @@ export class HttpTranslator implements IAdapter {
   }
   async send<T>(req: OpenSRFRequest): Promise<T> {
     const { service, method, params } = req;
-    console.log(service, method, params);
     const url = `${this.config.baseUrl}/osrf-http-translator`;
     const body: OSRFMessage<OSRFMethod>[] = [
       {
