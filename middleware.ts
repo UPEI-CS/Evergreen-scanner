@@ -21,7 +21,7 @@ export async function middleware(request: NextRequest) {
       response.cookies.delete("EG_AUTH_TOKEN");
       return response;
     }
-
+    console.log('here')
 
     const response = NextResponse.redirect(new URL("/", request.url));
     
