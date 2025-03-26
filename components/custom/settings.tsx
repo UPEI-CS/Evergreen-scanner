@@ -7,18 +7,15 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Drawer,
   DrawerContent,
-  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-  DrawerClose,
 } from "@/components/ui/drawer";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -28,7 +25,6 @@ import { useSettings } from "@/hooks/use-settings";
 import { useTheme } from "next-themes";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Shared settings content component that can be used in both Dialog and Drawer
 function SettingsContent() {
   const {
     enableManualItemEntry,
