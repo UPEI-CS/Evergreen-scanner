@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prebuild": "cd lib/eg-client && npm run build"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
