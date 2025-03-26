@@ -14,10 +14,9 @@ export type LibraryItem = {
   orgUnitId: number
 }
 export type ChangeableFields = keyof Pick<LibraryItem, "status" | "inHouseUseCount" | "inventoryDateTime">
-// Update the Step type to include new steps for each action
-export type Step = 1 | 2 | 2.5 | 3 | 3.1 | 3.2 | 3.3 | 3.4 | 3.5
+export type Step = 1 | 2 | 3 | 4 | 5 | 6
 
-// Add a new action type for selecting an action option
+
 export type ItemDisplayAction =
   | { type: "CONFIRM_ITEM" }
   | { type: "SCAN_NEW_ITEM" }
@@ -29,7 +28,6 @@ export type ItemDisplayAction =
   | { type: "UPDATE_INVENTORY_DATE"; payload: Date }
   | { type: "SHOW_ACTION_OPTIONS" }
   | { type: "RECORD_IN_HOUSE_USE" }
-  | { type: "UPDATE_IN_HOUSE_USE" }
   | { type: "UPDATE_INVENTORY" }
   | { type: "CHANGE_STATUS" }
   | { type: "CHECK_IN_ITEM" }
@@ -40,14 +38,14 @@ export interface ItemDisplayState {
   hasUpdated: boolean
 }
 
-// Update the reducer to handle the new actions
+
 export function itemDisplayReducer(state: ItemDisplayState, action: ItemDisplayAction): ItemDisplayState {
   switch (action.type) {
     case "CONFIRM_ITEM":
-      // Go directly to action selection (2.5) instead of step 2
+
       return { 
         ...state, 
-        step: 2.5,
+        step: 2,
         updatedItem: { ...state.item } 
       }
 
@@ -55,17 +53,16 @@ export function itemDisplayReducer(state: ItemDisplayState, action: ItemDisplayA
       return { ...state, step: 1 }
 
     case "GO_BACK":
-      // Handle going back from specific action steps to the action selection screen
-      if (state.step === 3.1 || state.step === 3.2 || state.step === 3.3 || state.step === 3.4 || state.step === 3.5 || state.step === 3) {
+
+      if (state.step > 2) {
         return {
           ...state,
-          step: 2.5,
-          updatedItem: { ...state.item }, // Reset any changes when going back
+          step: 2,
+          updatedItem: { ...state.item }, 
         }
       }
       
-      // When going back from action selection (2.5), go directly to step 1
-      if (state.step === 2.5) {
+      if (state.step === 2) {
         return {
           ...state,
           step: 1,
@@ -80,7 +77,7 @@ export function itemDisplayReducer(state: ItemDisplayState, action: ItemDisplayA
     case "SHOW_ACTION_OPTIONS":
       return {
         ...state,
-        step: 2.5,
+        step: 2,
         updatedItem: { ...state.item },
       }
 
@@ -94,24 +91,17 @@ export function itemDisplayReducer(state: ItemDisplayState, action: ItemDisplayA
     case "RECORD_IN_HOUSE_USE":
       return {
         ...state,
-        step: 3.1,
+        step: 3,
         updatedItem: {
           ...state.item,
           inHouseUseCount: state.item.inHouseUseCount + 1,
         },
       }
 
-    case "UPDATE_IN_HOUSE_USE":
-      return {
-        ...state,
-        step: 3.2,
-        updatedItem: { ...state.item },
-      }
-
     case "UPDATE_INVENTORY":
       return {
         ...state,
-        step: 3.3,
+        step: 4,
         updatedItem: {
           ...state.item,
           inventoryDateTime: new Date(),
@@ -121,14 +111,14 @@ export function itemDisplayReducer(state: ItemDisplayState, action: ItemDisplayA
     case "CHANGE_STATUS":
       return {
         ...state,
-        step: 3.4,
+        step: 5,
         updatedItem: { ...state.item },
       }
 
     case "CHECK_IN_ITEM":
       return {
         ...state,
-        step: 3.5,
+        step: 6,
         updatedItem: {
           ...state.item,
           status: "Available" as ItemStatus,

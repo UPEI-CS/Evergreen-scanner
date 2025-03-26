@@ -1,12 +1,12 @@
 "use client"
 
-import { useReducer, useEffect } from "react"
+import { useEffect, useReducer, useState } from "react"
 import { format } from "date-fns"
 import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui/select"
 import { itemDisplayReducer, type LibraryItem } from "./item-display-reducer"
@@ -16,11 +16,10 @@ import {
   SYSTEM_ITEM_STATUSES,
   type SystemItemStatus,
 } from "@/lib/eg-client/src/types/index"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { updateItem } from "@/app/actions"
 import { useSettings } from "@/hooks/use-settings"
 
-// Default empty item to use if itemInfo is undefined
 const defaultItem: LibraryItem = {
   id: 0,
   title: "N/A",
@@ -44,6 +43,7 @@ const formatDate = (date: Date | "N/A", formatString: string): string => {
 
 export function ItemDisplay({ itemInfo }: { itemInfo?: LibraryItem }) {
   const router = useRouter()
+  const searchParams = useSearchParams()  
   const {
     recordInHouseUse,
     updateInventoryDateTime,
@@ -51,10 +51,8 @@ export function ItemDisplay({ itemInfo }: { itemInfo?: LibraryItem }) {
     enabledStatusChanges,
     isStatusChangeEnabled,
   } = useSettings()
-
-  // Use the provided itemInfo or fall back to the default item
+  const [submitting, setSubmitting] = useState(false)
   const initialItem = itemInfo || defaultItem
-
   const [state, dispatch] = useReducer(itemDisplayReducer, {
     step: 1,
     item: initialItem,
@@ -62,24 +60,43 @@ export function ItemDisplay({ itemInfo }: { itemInfo?: LibraryItem }) {
     hasUpdated: false,
   })
 
-  // Handle item updates
   const handleSaveChanges = async (change: "status" | "inHouseUseCount" | "inventoryDateTime" | "checkIn") => {
     try {
+      setSubmitting(true)
       await updateItem(change, state.updatedItem)
-      toast.success("Item information updated successfully!", {
-        position: "top-center",
-        duration: 3000,
-      })
-      router.refresh()
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        url.searchParams.set('message', 'success')
+        window.location.replace(url.toString())
+      }
     } catch (error) {
-      toast.error(error as string, {
-        position: "top-center",
-        duration: 3000,
-      })
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        url.searchParams.set('message', 'error')
+        window.location.replace(url.toString())
+      }
+    } finally {
+      setSubmitting(false)
     }
   }
 
-  // If there's no item, show a message
+  useEffect(() => {
+    const message = searchParams.get("message")
+    if (message === "success") {
+      toast.success("Item information updated successfully!", {
+        position: "top-center", 
+        duration: 3000,
+      })
+      router.replace(window.location.pathname)
+    } else if (message === "error") {
+      toast.error("Failed to update item information", {
+        position: "top-center",
+        duration: 3000,
+      })
+      router.replace(window.location.pathname)
+    }
+  }, [router, searchParams])
+
   if (!state.item) {
     return (
       <Card>
@@ -98,7 +115,6 @@ export function ItemDisplay({ itemInfo }: { itemInfo?: LibraryItem }) {
     )
   }
 
-  // Render different content based on the current step
   const renderStepContent = () => {
     switch (state.step) {
       case 1:
@@ -156,8 +172,7 @@ export function ItemDisplay({ itemInfo }: { itemInfo?: LibraryItem }) {
           </>
         )
       
-      case 2.5:
-        // Check if any actions are available
+      case 2:
         const noActionsAvailable = !recordInHouseUse && !updateInventoryDateTime && !enableCheckIn && enabledStatusChanges.length === 0;
         
         return (
@@ -231,8 +246,7 @@ export function ItemDisplay({ itemInfo }: { itemInfo?: LibraryItem }) {
           </>
         )
       
-      // Record In-house Use - Modified to directly save changes
-      case 3.1:
+      case 3:
         return (
           <>
             <CardHeader>
@@ -258,14 +272,20 @@ export function ItemDisplay({ itemInfo }: { itemInfo?: LibraryItem }) {
               <Button variant="outline" onClick={() => dispatch({ type: "GO_BACK" })} className="w-full">
                 Back
               </Button>
-              <Button onClick={() => handleSaveChanges("inHouseUseCount")} className="w-full">
-                Save change
+              <Button onClick={() => handleSaveChanges("inHouseUseCount")} className="w-full" disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                
+                  </>
+                ) : (
+                  "Save change"
+                )}
               </Button>
             </CardFooter>
           </>
         )
-      // Update Inventory Date - Modified to directly save changes
-      case 3.3:
+      case 4:
         return (
           <>
             <CardHeader>
@@ -298,14 +318,20 @@ export function ItemDisplay({ itemInfo }: { itemInfo?: LibraryItem }) {
               <Button variant="outline" onClick={() => dispatch({ type: "GO_BACK" })} className="w-full">
                 Back
               </Button>
-              <Button onClick={() => handleSaveChanges("inventoryDateTime")} className="w-full">
-                Save change
+              <Button onClick={() => handleSaveChanges("inventoryDateTime")} className="w-full" disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+               
+                  </>
+                ) : (
+                  "Save change"
+                )}
               </Button>
             </CardFooter>
           </>
         )
-      // Change Status - Modified to directly save changes
-      case 3.4:
+      case 5:
         return (
           <>
             <CardHeader>
@@ -355,14 +381,20 @@ export function ItemDisplay({ itemInfo }: { itemInfo?: LibraryItem }) {
               <Button variant="outline" onClick={() => dispatch({ type: "GO_BACK" })} className="w-full">
                 Back
               </Button>
-              <Button onClick={() => handleSaveChanges("status")} className="w-full">
-                Save change
+              <Button onClick={() => handleSaveChanges("status")} className="w-full" disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  
+                  </>
+                ) : (
+                  "Save change"
+                )}
               </Button>
             </CardFooter>
           </>
         )
-      // Check In Item - Shows the current status and new "Available" status
-      case 3.5:
+      case 6:
         return (
           <>
             <CardHeader>
@@ -383,7 +415,7 @@ export function ItemDisplay({ itemInfo }: { itemInfo?: LibraryItem }) {
                   <div className="font-extrabold ">Available</div>
                 </div>
                 <div className="bg-muted p-4 rounded-md mt-2">
-                  <p className="text-sm">This action will check in the item and set its status to "Available".</p>
+                  <p className="text-sm">This action will check in the item and set its status to &quot;Available&quot;.</p>
                 </div>
               </div>
             </CardContent>
@@ -391,8 +423,14 @@ export function ItemDisplay({ itemInfo }: { itemInfo?: LibraryItem }) {
               <Button variant="outline" onClick={() => dispatch({ type: "GO_BACK" })} className="w-full">
                 Back
               </Button>
-              <Button onClick={() => handleSaveChanges("checkIn")} className="w-full">
-                Save change
+              <Button onClick={() => handleSaveChanges("checkIn")} className="w-full" disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </>
+                ) : (
+                  "Save change"
+                )}
               </Button>
             </CardFooter>
           </>
