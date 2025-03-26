@@ -17,6 +17,7 @@ import {
 } from "../types";
 import { AU } from "../types/generated/idl-types";
 import { IdlService } from "./idl";
+
 export class AuthService {
   public readonly session: SessionService;
   constructor(
@@ -34,14 +35,14 @@ export class AuthService {
       method: "open-ils.auth.login",
       params: [credentials],
     });
-
-    if(response.length === 0) {
+    console.log(JSON.stringify(response, null, 2));
+    if (response.length === 0) {
       return {
         data: null,
         error: "No response from server",
       };
     }
-    if(response.length === 1) {
+    if (response.length === 1) {
       const result = response[0] as OSRFMessage<
         OSRFConnectStatus | OSRFMethodException
       >;
@@ -50,10 +51,12 @@ export class AuthService {
         error: result.__p.payload.__p.status,
       };
     }
-    const result = response[0] as OSRFMessage<OSRFResult<AuthContent<LoginPayload>>>
-    const content = result.__p.payload.__p.content
-    
-    if(content.textcode !== "SUCCESS") {
+    const result = response[0] as OSRFMessage<
+      OSRFResult<AuthContent<LoginPayload>>
+    >;
+    const content = result.__p.payload.__p.content;
+
+    if (content.textcode !== "SUCCESS") {
       return {
         data: null,
         error: content.desc,
@@ -91,15 +94,15 @@ class SessionService {
       method: "open-ils.auth.session.retrieve",
       params: [authToken, returnTime ? 1 : 0, doNotResetSession ? 1 : 0],
     });
-   
-    if(response.length === 0) {
+    console.log(JSON.stringify(response, null, 2));
+    if (response.length === 0) {
       return {
         data: null,
         error: "No response from server",
       };
     }
 
-    if(response.length === 1) {
+    if (response.length === 1) {
       const result = response[0] as OSRFMessage<
         OSRFConnectStatus | OSRFMethodException
       >;
@@ -109,15 +112,14 @@ class SessionService {
       };
     }
 
-    const result = response[0] as OSRFMessage<OSRFResult<any>>
-    const content = result.__p.payload.__p.content
-    if( 'textcode' in content && 'desc' in content) {
+    const result = response[0] as OSRFMessage<OSRFResult<any>>;
+    const content = result.__p.payload.__p.content;
+    if ("textcode" in content && "desc" in content) {
       return {
         data: null,
         error: content.desc,
       };
     }
-
 
     if (returnTime) {
       const content = result.__p.payload.__p.content as {
@@ -134,7 +136,10 @@ class SessionService {
     }
 
     return {
-      data: this.idl.create<AU>("au", result.__p.payload.__p.content.__p) as T extends true ? { authtime: number; userobj: AU } : AU,
+      data: this.idl.create<AU>(
+        "au",
+        result.__p.payload.__p.content.__p
+      ) as T extends true ? { authtime: number; userobj: AU } : AU,
       error: null,
     };
   }
@@ -152,6 +157,7 @@ class SessionService {
       params: [authToken],
     });
 
+    console.log(JSON.stringify(response, null, 2));
 
     if (response.length === 0) {
       return {
@@ -170,8 +176,7 @@ class SessionService {
       };
     }
 
-    const result = response[0] as OSRFMessage<OSRFResult<string>>
-
+    const result = response[0] as OSRFMessage<OSRFResult<string>>;
 
     if (result.__p.payload.__p.status.toLowerCase() !== "ok") {
       return {
@@ -193,13 +198,13 @@ class SessionService {
   async resetTimeout({
     authToken,
   }: Pick<AuthParams, "authToken">): Promise<ServiceResult<number, string>> {
-
     const response = await this.adapter.send<AuthSessionResetResponse>({
       service: "open-ils.auth",
       method: "open-ils.auth.session.reset_timeout",
       params: [authToken],
     });
 
+    console.log(response);
     if (response.length === 0) {
       return {
         data: null,
@@ -216,8 +221,8 @@ class SessionService {
         error: result.__p.payload.__p.status,
       };
     }
-    const result = response[0] as OSRFMessage<OSRFResult<AuthContent<number>>>  
-    if(result.__p.payload.__p.content.textcode !== "SUCCESS") {
+    const result = response[0] as OSRFMessage<OSRFResult<AuthContent<number>>>;
+    if (result.__p.payload.__p.content.textcode !== "SUCCESS") {
       return {
         data: null,
         error: result.__p.payload.__p.content.desc,
