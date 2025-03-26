@@ -2,9 +2,6 @@ import { writeFileSync } from "fs";
 import path from "path";
 import { createContext, runInContext, RunningScriptOptions } from "vm";
 import fs from "fs";
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 export interface IdlFieldDef {
   name: string;
@@ -150,7 +147,7 @@ function evalIDLScript(js: string) {
 async function main() {
   console.log("📥 Fetching IDL script...");
   
-  const baseUrl = process.argv[2] || process.env.EG_URL;
+  const baseUrl = process.argv[2]
   if (!baseUrl) {
     throw new Error("Evergreen URL must be provided either as a command line argument or EG_URL environment variable");
   }
