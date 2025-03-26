@@ -1,8 +1,9 @@
 import { writeFileSync } from "fs";
 import path from "path";
 import { createContext, runInContext, RunningScriptOptions } from "vm";
-import dotenv from "dotenv";
 import fs from "fs";
+import dotenv from 'dotenv';
+
 dotenv.config();
 
 export interface IdlFieldDef {
@@ -23,7 +24,6 @@ export interface IdlClassDef {
   label?: string;
 }
 
-// New interface to represent all IDL classes
 export interface IdlClasses {
   [className: string]: IdlClassDef;
 }
@@ -150,9 +150,9 @@ function evalIDLScript(js: string) {
 async function main() {
   console.log("📥 Fetching IDL script...");
   
-  const baseUrl = process.env.EG_BASE_URL;
+  const baseUrl = process.argv[2] || process.env.EG_URL;
   if (!baseUrl) {
-    throw new Error("EG_BASE_URL environment variable is not set");
+    throw new Error("Evergreen URL must be provided either as a command line argument or EG_URL environment variable");
   }
 
   const response = await fetch(`${baseUrl}/IDL2js`);
@@ -191,4 +191,7 @@ async function main() {
   console.log("✅ Type generation complete!");
 }
 
-main();
+main().catch(error => {
+  console.error("Error:", error);
+  process.exit(1);
+});

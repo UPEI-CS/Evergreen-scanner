@@ -23,6 +23,9 @@ export class OsrfGatewayV1 implements IAdapter {
     return this.pcrudService;
   }
   async send<T>(req: OpenSRFRequest): Promise<T> {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(JSON.stringify(req, null, 2));
+    }
     throw new Error("Method not implemented.");
   }
 }

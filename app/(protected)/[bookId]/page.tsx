@@ -7,7 +7,8 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 
 const getItemInfo = cache(async (itemID: string, authToken: string) => {
-  const { data: dataArray, error } = await client
+  try{
+    const { data: dataArray, error } = await client
     .pcrud(authToken)
     .from("acp")
     .where({
@@ -69,6 +70,10 @@ const getItemInfo = cache(async (itemID: string, authToken: string) => {
   };
   console.log(itemInfo);
   return itemInfo;
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to fetch item info");
+  }
 });
 
 export async function generateMetadata({

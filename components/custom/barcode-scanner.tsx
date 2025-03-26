@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Quagga from "quagga";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, SendHorizonal , Search, Camera, CameraIcon, Loader } from "lucide-react";
+import { Loader2, SendHorizonal , Camera, CameraIcon } from "lucide-react";
 import { useSettings } from "@/hooks/use-settings";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -25,7 +25,7 @@ export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
             inputStream: {
               name: "Live",
               type: "LiveStream",
-              target: scannerRef.current,
+              target: scannerRef.current as HTMLElement,
               constraints: {
                 facingMode: "environment",
               },
@@ -144,7 +144,7 @@ export default function BarcodeScanner() {
               </Button>
             </div>
             <Button type="submit" size="sm" disabled={pending}> 
-              {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendHorizonal className="w-4 h-4 text-muted-foreground" />}
+              {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendHorizonal className="w-4 h-4" />}
             </Button>
           </form>
         )}
