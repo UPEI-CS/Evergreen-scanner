@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Quagga from "quagga";
+import Quagga from '@ericblade/quagga2'
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, SendHorizonal , Camera, CameraIcon } from "lucide-react";
 import { useSettings } from "@/hooks/use-settings";
@@ -14,7 +14,6 @@ export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
   const [cameraError, setCameraError] = useState("");
   const router = useRouter();
   const scannerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (!scannerRef.current) return;
 
@@ -50,7 +49,6 @@ export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
         Quagga.onDetected((result: any) => {
           if (result.codeResult?.code) {
             setLoading(true);
-            Quagga.stop();
             router.push(`/${result.codeResult.code}`);
           }
         });
