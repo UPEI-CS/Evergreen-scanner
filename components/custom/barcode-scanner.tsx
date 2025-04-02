@@ -12,6 +12,7 @@ import { Input } from "../ui/input";
 export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(false);
   const [cameraError, setCameraError] = useState("");
+  const [result, setResult] = useState("");
   const router = useRouter();
   const scannerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -49,6 +50,8 @@ export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
         Quagga.onDetected((result: any) => {
           if (result.codeResult?.code) {
             setLoading(true);
+            setResult(result.codeResult.code);
+            Quagga.stop();
             router.push(`/${result.codeResult.code}`);
           }
         });
@@ -90,7 +93,7 @@ export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
             {loading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-opacity-50 bg-gray-800">
                 <Loader2 className="animate-spin h-16 w-16 text-white" />
-                <p className="text-white mt-2">Processing</p>
+                <p className="text-white mt-2">Processing {result}</p>
               </div>
             )}
           </div>
