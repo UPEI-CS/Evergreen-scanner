@@ -85,13 +85,13 @@ export function ItemDisplay({ itemInfo }: { itemInfo?: LibraryItem }) {
     if (message === "success") {
       toast.success("Item information updated successfully!", {
         position: "top-center", 
-        duration: 3000,
+        duration: 10000,
       })
       router.replace(window.location.pathname)
     } else if (message === "error") {
       toast.error("Failed to update item information", {
         position: "top-center",
-        duration: 3000,
+        duration: 10000,
       })
       router.replace(window.location.pathname)
     }
@@ -179,9 +179,7 @@ export function ItemDisplay({ itemInfo }: { itemInfo?: LibraryItem }) {
           <>
             <CardHeader>
               <CardTitle className="break-words">Select an Action</CardTitle>
-              <CardDescription> 
-                Please select an action to perform on the item.
-              </CardDescription>
+             
             </CardHeader>
             <CardContent className="space-y-4">
               {noActionsAvailable ? (
@@ -203,7 +201,7 @@ export function ItemDisplay({ itemInfo }: { itemInfo?: LibraryItem }) {
                         </Button>
                       )}
                       
-                      {enableCheckIn && (
+                      {enableCheckIn && itemInfo?.status === "Checked out" && (
                         <Button
                           onClick={() => dispatch({ type: "CHECK_IN_ITEM" })}
                           className="w-full justify-start h-10 py-3 px-4"
@@ -410,12 +408,8 @@ export function ItemDisplay({ itemInfo }: { itemInfo?: LibraryItem }) {
                   <Label>Current Status</Label>
                   <div className="font-medium capitalize">{state.item.status}</div>
                 </div>
-                <div className="space-y-2">
-                  <Label>New Status</Label>
-                  <div className="font-extrabold ">Available</div>
-                </div>
                 <div className="bg-muted p-4 rounded-md mt-2">
-                  <p className="text-sm">This action will check in the item and set its status to &quot;Available&quot;.</p>
+                  <p className="text-sm">This action will check in the item.</p>
                 </div>
               </div>
             </CardContent>

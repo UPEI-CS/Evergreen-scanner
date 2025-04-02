@@ -19,9 +19,9 @@ export default function Error() {
             Error
           </h2>
           <p className="text-gray-700 dark:text-gray-300">
-            Something went wrong while fetching the item information.
+          Either no item was found for that barcode or could not reach the Evergreen server
           </p>
-          <Button onClick={() => router.push("/")}>Go Home</Button>
+          <Button onClick={() => router.push("/")}>Back</Button>
         </CardContent>
       </Card>
     </div>

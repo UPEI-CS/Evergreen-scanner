@@ -1,19 +1,28 @@
 import { ItemDisplay } from "@/components/custom/item-display";
 import { LibraryItem } from "@/components/custom/item-display-reducer";
-import { client } from "@/lib/eg-client";
+import { HttpTranslator } from "@/lib/eg-client/src/adapters/http-translator";
 import { ItemStatus } from "@/lib/eg-client/src/types";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
 const getItemInfo = cache(async (itemID: string, authToken: string) => {
+  console.log("GETTING ITEM INFO", itemID, authToken);
   try{
+    const cookieStore = await cookies();
+    const egServer = cookieStore.get("EG_SERVER")?.value;
+    if (!egServer) {
+      throw new Error("Evergreen server is not set");
+    }
+    const client = new HttpTranslator({
+      baseUrl: egServer,
+    });
     const { data: dataArray, error } = await client
-    .pcrud(authToken)
-    .from("acp")
-    .where({
-      barcode: itemID,
-    })
+      .pcrud(authToken)
+      .from("acp")
+      .where({
+        barcode: itemID,
+      })
     .flesh(3)
     .fleshFields({
       acp: ["location", "status", "call_number", "circ_lib", "latest_inventory"],
@@ -25,7 +34,6 @@ const getItemInfo = cache(async (itemID: string, authToken: string) => {
     throw new Error("Failed to fetch data");
   }
   const itemId = dataArray[0].id();
-  console.log("ITEM ID", itemId);
 
   const { data: inHouseUses, error: inhouseUsesError } = await client
     .pcrud(authToken)
@@ -42,7 +50,6 @@ const getItemInfo = cache(async (itemID: string, authToken: string) => {
     console.error(inhouseUsesError);
     throw new Error("Failed to fetch inhouse use count");
   }
-  console.log("INHOUSE USES", inHouseUses);
   const data = dataArray[0];
   const barcode = data.barcode();
 
@@ -54,7 +61,6 @@ const getItemInfo = cache(async (itemID: string, authToken: string) => {
   const orgUnitLocation = data.circ_lib()?.shortname();
   const orgUnitId = data.circ_lib()?.id();
   const copyInventory = data.latest_inventory()?.inventory_date();
-  console.log("COPY INVENTORY", copyInventory);
   const itemInfo: LibraryItem = {
     id: itemId!,
     title: title || "N/A",
@@ -68,7 +74,6 @@ const getItemInfo = cache(async (itemID: string, authToken: string) => {
     orgUnitId: orgUnitId || -1,
     inventoryDateTime: copyInventory ? new Date(copyInventory) : "N/A",
   };
-  console.log(itemInfo);
   return itemInfo;
   } catch (error) {
     console.error(error);

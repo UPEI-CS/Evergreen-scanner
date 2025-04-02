@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
-import { client } from "@/lib/eg-client";
+import { HttpTranslator } from "@/lib/eg-client/src/adapters/http-translator";
 import type { NextRequest } from "next/server";
 
 
 export async function middleware(request: NextRequest) {
   const authToken = request.cookies.get("EG_AUTH_TOKEN")?.value;
+  const egServer = request.cookies.get("EG_SERVER")?.value;
   const { pathname } = request.nextUrl;
 
-  if (!authToken && pathname !== "/login") {
+  if ((!authToken || !egServer) && pathname !== "/login") {
     return NextResponse.redirect(new URL("/login", request.url));
   }
+  const client = new HttpTranslator({
+    baseUrl: egServer,
+  });
 
   if (authToken && pathname === "/login") {
 

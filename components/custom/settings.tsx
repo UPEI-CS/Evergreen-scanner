@@ -45,7 +45,7 @@ function SettingsContent() {
       <div className="space-y-4">
         <h3 className="font-semibold">Appearance</h3>
         <div className="flex items-center justify-between pl-2">
-          <Label>{theme === "dark" ? "Dark mode" : "Light mode"}</Label>
+          <Label>Dark mode</Label>
           <Switch
             id="theme"
             checked={theme === "dark"}

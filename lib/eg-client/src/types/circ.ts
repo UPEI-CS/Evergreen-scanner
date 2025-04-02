@@ -104,7 +104,7 @@ export type ManualItemStatus = typeof MANUAL_ITEM_STATUSES[number];
  */
 export const SYSTEM_ITEM_STATUSES = [
   'Available',
-  'Checked Out',
+  'Checked out',
   'Lost',
   'In Process',
   'In Transit',

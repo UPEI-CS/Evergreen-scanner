@@ -6,17 +6,22 @@ import {
 } from "@/components/ui/popover";
 import { User } from "lucide-react";
 import { SettingsDialog } from "@/components/custom/settings";
-import { client } from "@/lib/eg-client";
+
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import LogoutButton from "@/components/custom/logout-button";
 import { Separator } from "@/components/ui/separator";
+import { HttpTranslator } from "@/lib/eg-client/src/adapters/http-translator";
 export default async function Navbar() {
   const cookieStore = await cookies();
   const authToken = cookieStore.get("EG_AUTH_TOKEN")?.value;
-  if (!authToken) {
+  const egServer = cookieStore.get("EG_SERVER")?.value;
+  if (!authToken || !egServer) {
     redirect("/login");
   }
+  const client = new HttpTranslator({
+    baseUrl: egServer,
+  });
   const { data, error } = await client.auth.session.retrieve({
     authToken: authToken,
     returnTime: true,

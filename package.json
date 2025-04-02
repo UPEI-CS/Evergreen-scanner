@@ -1,5 +1,5 @@
 {
-  "name": "evergreen-scanner",
+  "name": "evergreen-mobile",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -29,9 +29,9 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.473.0",
-    "next": "15.1.4",
+    "next": "^15.2.4",
     "next-themes": "^0.4.6",
-    "quagga": "^0.12.1",
+    "quagga": "^0.6.16",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",

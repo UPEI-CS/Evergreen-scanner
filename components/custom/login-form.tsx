@@ -52,9 +52,7 @@ export default function LoginForm() {
   };
 
   return (
-    <Card className="w-full">
-      <CardContent>
-        <Form {...form}>
+      <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-4"
@@ -119,7 +117,6 @@ export default function LoginForm() {
             </Button>
           </form>
         </Form>
-      </CardContent>
-    </Card>
+   
   );
 } 

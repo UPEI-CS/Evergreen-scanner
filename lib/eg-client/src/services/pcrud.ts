@@ -118,7 +118,6 @@ export class PCrudService<T extends IdlClassName | undefined = undefined> {
       };
     }
     const data = response.slice(0, -1) as OSRFMessage<OSRFResult>[];
-    console.log("DATA", JSON.stringify(data, null, 2));
     if (methodType === "id_list") {
       return {
         data: data.flatMap((item) => {

@@ -1,7 +1,7 @@
 "use server";
 
 import { LibraryItem } from "@/components/custom/item-display-reducer";
-import { client } from "@/lib/eg-client";
+import { HttpTranslator } from "@/lib/eg-client/src/adapters/http-translator";
 import { ManualItemStatus } from "@/lib/eg-client/src/types";
 import { cookies } from "next/headers";
 export async function updateItem(
@@ -10,63 +10,85 @@ export async function updateItem(
 ) {
   const cookieStore = await cookies();
   const authToken = cookieStore.get("EG_AUTH_TOKEN")?.value;
-  if (!authToken) {
+  const egServer = cookieStore.get("EG_SERVER")?.value;
+  if (!authToken || !egServer) {
     throw new Error("Unauthorized");
   }
-  const errors: string[] = [];
-  switch (change) {
-    case "status":
-      const { data, error } = await client
-        .circ(authToken)
-        .markItem(newLibraryItem.id, newLibraryItem.status as ManualItemStatus);
-      if (error || !data) {
-        errors.push(error || "Failed to update item status");
-      }
+  const client = new HttpTranslator({
+    baseUrl: egServer,
+  });
+  try {
+    switch (change) {
+      case "status":
+        const { data, error } = await client
+          .circ(authToken)
+          .markItem(
+            newLibraryItem.id,
+            newLibraryItem.status as ManualItemStatus
+          );
+        if (error || !data) {
+          throw new Error(error || "Failed to update item status");
+        }
 
-      break;
-    case "inHouseUseCount":
-      const { data: inHouseUseData, error: inHouseUseError } = await client
-        .circ(authToken)
-        .createInHouseUse({
-          copyid: newLibraryItem.id,
-          location: newLibraryItem.orgUnitId,
-          count: 1,
-        });
-      if (inHouseUseError || !inHouseUseData) {
-        errors.push(inHouseUseError || "Failed to update in house use count");
-      }
-      break;
-    case "inventoryDateTime":
-      const { data: inventoryDateTimeData, error: inventoryDateTimeError } =
-        await client.circ(authToken).updateItemInventory([newLibraryItem.id]);
-      if (inventoryDateTimeError || !inventoryDateTimeData) {
-        errors.push(
-          inventoryDateTimeError || "Failed to update inventory date time"
-        );
-      }
-      if (
-        inventoryDateTimeData?.failureCount &&
-        inventoryDateTimeData?.failureCount > 0
-      ) {
-        errors.push(
-          inventoryDateTimeData?.failureCount.toString() ||
-            "Failed to update inventory date time"
-        );
-      }
-      break;
-    case "checkIn":
-      const { data: checkInData, error: checkInError } = await client
-        .circ(authToken)
-        .checkIn({
+        break;
+      case "inHouseUseCount":
+        const { data: inHouseUseData, error: inHouseUseError } = await client
+          .circ(authToken)
+          .createInHouseUse({
+            copyid: newLibraryItem.id,
+            location: newLibraryItem.orgUnitId,
+            count: 1,
+          });
+        if (inHouseUseError || !inHouseUseData) {
+          throw new Error(
+            inHouseUseError || "Failed to update in-house use count"
+          );
+        }
+        break;
+      case "inventoryDateTime":
+        const { data: inventoryDateTimeData, error: inventoryDateTimeError } =
+          await client.circ(authToken).updateItemInventory([newLibraryItem.id]);
+        if (inventoryDateTimeError || !inventoryDateTimeData) {
+          throw new Error(
+            inventoryDateTimeError || "Failed to update inventory date time"
+          );
+        }
+        if (
+          inventoryDateTimeData?.failureCount &&
+          inventoryDateTimeData?.failureCount > 0
+        ) {
+          throw new Error(
+            inventoryDateTimeData?.failureCount.toString() ||
+              "Failed to update inventory date time"
+          );
+        }
+        break;
+      case "checkIn":
+        const { data: checkInData, error: checkInError } = await client
+          .circ(authToken)
+          .checkIn({
             copy_id: newLibraryItem.id,
             circ_lib: newLibraryItem.orgUnitId,
-        });
-      if (checkInError || !checkInData) {
-        errors.push(checkInError || "Failed to check in item");
-      }
+          });
+        if (checkInError || !checkInData) {
+          throw new Error(checkInError || "Failed to check in item");
+        }
+    }
+  } catch (error) {
+    console.error(error);
+    throw error;
   }
+}
 
-  if (errors.length > 0) {
-    throw new Error(errors.join("\n"));
+export async function validateServer(server: string) {
+  const client = new HttpTranslator({
+    baseUrl: server,
+  });
+  const { data, error } = await client.health.ping(server);
+  console.log(data, error);
+  if (error || !data) {
+    throw new Error(error || "Failed to validate server");
   }
+  const cookieStore = await cookies();
+  cookieStore.set("EG_SERVER", server);
 }

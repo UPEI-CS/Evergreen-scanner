@@ -1,4 +1,4 @@
-import { client } from "@/lib/eg-client";
+import { HttpTranslator } from "@/lib/eg-client/src/adapters/http-translator";
 import { Button } from "../ui/button";
 import { LogOut } from "lucide-react";
 import { cookies } from "next/headers";
@@ -10,6 +10,13 @@ export default function LogoutButton() {
         "use server";
         const cookieStore = await cookies();
         const authToken = cookieStore.get("EG_AUTH_TOKEN")?.value;
+        const egServer = cookieStore.get("EG_SERVER")?.value;
+        if (!authToken || !egServer) {
+          redirect("/login");
+        }
+        const client = new HttpTranslator({
+          baseUrl: egServer,
+        });
         cookieStore.delete("EG_AUTH_TOKEN");
         authToken && (await client.auth.session.delete({ authToken }));
         redirect("/login");

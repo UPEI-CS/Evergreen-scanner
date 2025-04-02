@@ -6,7 +6,6 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-COPY lib/eg-client/package.json ./lib/eg-client/package.json
 
 RUN npm ci
 

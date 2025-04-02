@@ -1,7 +1,16 @@
-import { NextResponse } from "next/server";
-import { client } from "@/lib/eg-client";
-export async function POST(request: Request) {
+import { NextResponse, NextRequest } from "next/server";
+import { HttpTranslator } from "@/lib/eg-client/src/adapters/http-translator";
+
+export async function POST(request: NextRequest) {
   const { username, password } = await request.json();
+  const egServer = request.cookies.get("EG_SERVER");
+  console.log("EG_SERVER", egServer);
+  if (!egServer) {
+    return NextResponse.json({ error: "Evergreen server is not set" }, { status: 400 });
+  }
+  const client = new HttpTranslator({
+    baseUrl: egServer.value,
+  });
   const { data, error } = await client.auth.login({
     username,
     password,
