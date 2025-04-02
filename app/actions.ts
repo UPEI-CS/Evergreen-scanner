@@ -81,14 +81,33 @@ export async function updateItem(
 }
 
 export async function validateServer(server: string) {
-  const client = new HttpTranslator({
-    baseUrl: server,
-  });
-  const { data, error } = await client.health.ping(server);
-  console.log(data, error);
-  if (error || !data) {
-    throw new Error(error || "Failed to validate server");
+  try {
+    const client = new HttpTranslator({
+      baseUrl: server,
+    });
+    const { data, error } = await client.health.ping(server);
+    
+    if (error || !data) {
+      return {
+        success: false,
+        message: "Failed to validate server",
+        error: error || "No response from server"
+      };
+    }
+
+    const cookieStore = await cookies();
+    cookieStore.set("EG_SERVER", server);
+    
+    return {
+      success: true,
+      message: "Successfully connected to server"
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Failed to connect to server",
+      error: error instanceof Error ? error.message : "Unknown error occurred"
+    };
   }
-  const cookieStore = await cookies();
-  cookieStore.set("EG_SERVER", server);
 }

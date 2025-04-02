@@ -15,7 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Loader2 } from "lucide-react";
-
+import { toast } from "sonner";
 const formSchema = z.object({
   server: z.string().url().min(1, { message: "Server is required" }),
 });
@@ -34,10 +34,16 @@ export default function EgServerInput({
   });
   const handleSubmit = async ({ server }: z.infer<typeof formSchema>) => {
     try {
-      await validateServer(server);
-      setIsDisabled(true);
+      const response = await validateServer(server);
+      if (response.success) {
+        toast.success(response.message);
+        setIsDisabled(true);
+      } else {
+        toast.error(response.message);
+      }
     } catch (error) {
       console.error(error);
+      toast.error("An unexpected error occurred");
     }
   };
 
@@ -96,6 +102,7 @@ export default function EgServerInput({
             </FormItem>
           )}
         />
+
       </form>
     </Form>
   );
