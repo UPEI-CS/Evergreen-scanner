@@ -57,7 +57,7 @@ const getItemInfo = cache(async (itemID: string, authToken: string) => {
   const title = data.call_number()?.record()?.simple_record()?.title();
   const location = data.location()?.name();
   const status = data.status()?.name();
-  const circulationModifier = data.circ_modifier()?.name();
+  const circulationModifier = data.circ_modifier() as unknown as string;
   const orgUnitLocation = data.circ_lib()?.shortname();
   const orgUnitId = data.circ_lib()?.id();
   const copyInventory = data.latest_inventory()?.inventory_date();
@@ -74,6 +74,7 @@ const getItemInfo = cache(async (itemID: string, authToken: string) => {
     orgUnitId: orgUnitId || -1,
     inventoryDateTime: copyInventory ? new Date(copyInventory) : "N/A",
   };
+  
   return itemInfo;
   } catch (error) {
     console.error(error);
