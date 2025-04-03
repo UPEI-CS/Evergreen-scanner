@@ -10,11 +10,18 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
 export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
-  const [loading, setLoading] = useState(false);
+  const [isDected, setIsDetected] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const [result, setResult] = useState("");
   const router = useRouter();
   const scannerRef = useRef<HTMLDivElement>(null);
+
+  const handleSubmit = () => {
+    if (result) {
+      router.push(`/${result}`);
+    }
+    setIsDetected(false);
+  }
   useEffect(() => {
     if (!scannerRef.current) return;
 
@@ -49,10 +56,9 @@ export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
 
         Quagga.onDetected((result: any) => {
           if (result.codeResult?.code) {
-            setLoading(true);
+            setIsDetected(true);
             setResult(result.codeResult.code);
             Quagga.stop();
-            router.push(`/${result.codeResult.code}`);
           }
         });
       } catch (error) {
@@ -69,15 +75,14 @@ export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
         console.log("Error stopping Quagga:", e);
       }
     };
-  }, [router]);
+  }, []);
 
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardContent className="p-0 relative overflow-hidden rounded-lg aspect-[4/3]">
         <Button
-          variant="outline"
           size="sm"
-          className="absolute top-2 right-2 z-10 bg-white/80 hover:bg-white/90 dark:bg-black/80 dark:hover:bg-black/90"
+          className="absolute top-2 right-2 z-10"
           onClick={onClose}
         >
           Close
@@ -90,10 +95,15 @@ export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
         ) : (
           <div className="relative w-full h-full">
             <div ref={scannerRef} className="w-full h-full"></div>
-            {loading && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-opacity-50 bg-gray-800">
-                <Loader2 className="animate-spin h-16 w-16 text-white" />
-                <p className="text-white mt-2">Processing {result}</p>
+            {isDected && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-opacity-100 bg-primary-foreground">
+                <p className=" mt-2">Processed barcode: {result}</p>
+                <Button  onClick={handleSubmit} className="mt-4 w-48">
+                 
+                  Submit
+                </Button>
+               
+
               </div>
             )}
           </div>
