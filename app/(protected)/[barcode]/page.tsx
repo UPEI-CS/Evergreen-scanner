@@ -6,8 +6,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
-const getItemInfo = cache(async (itemID: string, authToken: string) => {
-  console.log("GETTING ITEM INFO", itemID, authToken);
+const getItemInfo = cache(async (itemBarcode: string, authToken: string) => {
   try{
     const cookieStore = await cookies();
     const egServer = cookieStore.get("EG_SERVER")?.value;
@@ -21,8 +20,8 @@ const getItemInfo = cache(async (itemID: string, authToken: string) => {
       .pcrud(authToken)
       .from("acp")
       .where({
-        barcode: itemID,
-      })
+        barcode: itemBarcode,
+      })  
     .flesh(3)
     .fleshFields({
       acp: ["location", "status", "call_number", "circ_lib", "latest_inventory"],
@@ -31,7 +30,7 @@ const getItemInfo = cache(async (itemID: string, authToken: string) => {
     })
     .select();
   if (!dataArray || error) {
-    throw new Error("Failed to fetch data");
+    throw new Error("Failed to fetch item information for barcode: " + itemBarcode);
   }
   const itemId = dataArray[0].id();
 
@@ -51,12 +50,12 @@ const getItemInfo = cache(async (itemID: string, authToken: string) => {
     throw new Error("Failed to fetch inhouse use count");
   }
   const data = dataArray[0];
-  const barcode = data.barcode();
 
   const callnumber = data.call_number()?.label();
   const title = data.call_number()?.record()?.simple_record()?.title();
   const location = data.location()?.name();
   const status = data.status()?.name();
+  // circulationModifier may become problematic as it can be a string on some evergreen instances or an object from the CCM class on others
   const circulationModifier = data.circ_modifier() as unknown as string;
   const orgUnitLocation = data.circ_lib()?.shortname();
   const orgUnitId = data.circ_lib()?.id();
@@ -64,7 +63,7 @@ const getItemInfo = cache(async (itemID: string, authToken: string) => {
   const itemInfo: LibraryItem = {
     id: itemId!,
     title: title || "N/A",
-    barcode: barcode!,
+    barcode: itemBarcode,
     callNumber: callnumber || "N/A",
     shelvingLocation: location || "N/A",
     circModifier: circulationModifier || "N/A",
@@ -78,42 +77,42 @@ const getItemInfo = cache(async (itemID: string, authToken: string) => {
   return itemInfo;
   } catch (error) {
     console.error(error);
-    throw new Error("Failed to fetch item info");
+    throw new Error(error instanceof Error ? error.message : "Failed to fetch item information for barcode: " + itemBarcode);
   }
 });
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ bookId: string }>;
+  params: Promise<{ barcode: string }>;
 }) {
   const resolvedParams = await params;
-  const itemID = resolvedParams.bookId;
+  const barcode = resolvedParams.barcode;
   const cookieStore = await cookies();
   const authToken = cookieStore.get("EG_AUTH_TOKEN")?.value;
   if (!authToken) {
     throw new Error("Unauthorized");
   }
-  const itemInfo = await getItemInfo(itemID, authToken);
+  const itemInfo = await getItemInfo(barcode, authToken);
   return {
     title: `Item Title: ${itemInfo.title}`,
   };
 }
 
-export default async function BookPage({
+export default async function ItemPage({
   params,
 }: {
-  params: Promise<{ bookId: string }>;
+  params: Promise<{ barcode: string }>;
 }) {
   const resolvedParams = await params;
-  const itemID = resolvedParams.bookId;
+  const barcode = resolvedParams.barcode;
   const cookieStore = await cookies();
   const authToken = cookieStore.get("EG_AUTH_TOKEN")?.value;
 
   if (!authToken) {
     redirect("/");
   }
-  const itemInfo = await getItemInfo(itemID, authToken);
+  const itemInfo = await getItemInfo(barcode, authToken);
   return (
     <div className="max-w-xl mx-2 sm:mx-auto mt-10">
       <ItemDisplay itemInfo={itemInfo} />

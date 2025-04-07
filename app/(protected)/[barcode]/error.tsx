@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
 
-export default function Error() {
+export default function Error({error}: {error: Error & {digest?: string}}) {
   const router = useRouter();
   return (
     <div className="flex items-center justify-center w-full h-full min-h-[calc(100vh-64px)]">
@@ -19,7 +19,7 @@ export default function Error() {
             Error
           </h2>
           <p className="text-gray-700 dark:text-gray-300">
-          Either no item was found for that barcode or could not reach the Evergreen server
+          {error.message || "Either no item was found for that barcode or could not reach the Evergreen server"}
           </p>
           <Button onClick={() => router.push("/")}>Back</Button>
         </CardContent>
