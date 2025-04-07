@@ -135,38 +135,26 @@ if (data) {
 
 There are two ways to configure your Evergreen server URL:
 
-1. **Through the UI (Recommended for Development)**
+1. **Through the UI**
    - The application provides a server input component in the UI
    - Enter your Evergreen server URL and click "Connect"
    - The URL will be validated and stored as a cookie
    - You can disconnect and change the URL at any time
-   ```typescript
-   // Example of the UI component usage
-   <EgServerInput server={currentServerUrl} />
-   ```
 
 2. **Command Line (For Type Generation)**
    - You can pass the server URL directly when generating types
    - Useful for CI/CD pipelines or initial setup
-   ```bash
-   # Option 1: Using npm script with URL
-   npm run generate-types https://your-evergreen-server.com
-
-   # Option 2: Using environment variable
-   EG_BASE_URL=https://your-evergreen-server.com npm run generate-types
-   ```
 
 ### Client Type Generation
 - Run type generation whenever the Evergreen schema changes
 - Generated types provide:
   - IDE autocompletion
   - Compile-time type checking
-  - Type-safe database operations
 - Types are generated from your Evergreen instance's IDL schema
 
 ### Authentication
 - Configure authentication settings through the UI
-- Supports both staff and OPAC login types
+- Supports only staff login
 - Ensure proper permissions are set in your Evergreen instance
 
 ## Dependencies
