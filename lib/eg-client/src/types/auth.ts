@@ -22,7 +22,7 @@ export interface AuthCredentials {
   /** Password for login */
   password: string;
   /** Type of login being performed */
-  type: 'staff' | 'opac';
+  type: 'staff'
   /** Optional organization ID */
   org?: number | null;
 }
@@ -71,4 +71,3 @@ export type AuthSessionRetrieveResponse = ServiceResponse<UserObject | SessionCo
 
 export type AuthSessionDeleteResponse = ServiceResponse<string>;
 
-/** Standard service result format */
