@@ -19,7 +19,7 @@ export default function Error({error}: {error: Error & {digest?: string}}) {
             Error
           </h2>
           <p className="text-gray-700 dark:text-gray-300">
-          {error.message || "Either no item was found for that barcode or could not reach the Evergreen server"}
+          Either no item was found for that barcode or could not reach the Evergreen server
           </p>
           <Button onClick={() => router.push("/")}>Back</Button>
         </CardContent>
