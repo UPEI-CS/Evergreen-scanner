@@ -111,3 +111,10 @@ export async function validateServer(server: string) {
     };
   }
 }
+
+export async function disconnectServer() {
+  const cookieStore = await cookies();
+  cookieStore.delete("EG_SERVER");
+}
+
+

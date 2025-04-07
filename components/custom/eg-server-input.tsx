@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { validateServer } from "@/app/actions";
+import { disconnectServer, validateServer } from "@/app/actions";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,6 +26,7 @@ export default function EgServerInput({
   server: string | undefined;
 }) {
   const [isDisabled, setIsDisabled] = useState(!!server);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -47,6 +48,23 @@ export default function EgServerInput({
     }
   };
 
+  const handleDisconnect = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setIsDisconnecting(true);
+    try {
+      await disconnectServer();
+      form.reset();
+      setIsDisabled(false);
+      toast.success("Successfully disconnected from server");
+    } catch (error) {
+      console.error(error);
+      toast.error("An unexpected error occurred while disconnecting");
+    } finally {
+      setIsDisconnecting(false);
+    }
+
+  };
+
   return (
     <Form {...form}>
       <form
@@ -58,7 +76,7 @@ export default function EgServerInput({
           name="server"
           render={({ field }) => (
             <FormItem className="w-full">
-              <FormLabel>Evergreen Server</FormLabel>
+              <FormLabel className="text-sm font-semibold">Evergreen Server</FormLabel>
               <div className="flex w-full gap-2">
                 <FormControl className="flex-grow">
                   <Input
@@ -87,14 +105,17 @@ export default function EgServerInput({
                 ) : (
                   <Button
                     type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setIsDisabled(false);
-                      form.reset();
-                    }}
+                    onClick={handleDisconnect}
                     className="whitespace-nowrap"
-                  >
-                    Disconnect
+                    disabled={isDisconnecting}
+                    >
+                    {isDisconnecting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      </>
+                    ) : (
+                      "Disconnect"
+                    )}
                   </Button>
                 )}
               </div>
