@@ -12,15 +12,18 @@ import { Input } from "../ui/input";
 export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
   const [isDected, setIsDetected] = useState(false);
   const [cameraError, setCameraError] = useState("");
+  const [pending, setPending] = useState(false);
   const [result, setResult] = useState("");
   const router = useRouter();
   const scannerRef = useRef<HTMLDivElement>(null);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setPending(true);
     if (result) {
       router.push(`/${result}`);
     }
     setIsDetected(false);
+    setPending(false);
   }
   useEffect(() => {
     if (!scannerRef.current) return;
@@ -98,9 +101,8 @@ export function BarcodeScannerCard({ onClose }: { onClose: () => void }) {
             {isDected && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-opacity-100 bg-primary-foreground">
                 <p className=" mt-2">Processed barcode: {result}</p>
-                <Button  onClick={handleSubmit} className="mt-4 w-48">
-                 
-                  Submit
+                <Button disabled={pending} onClick={handleSubmit} className="mt-4 w-48">
+                  {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit"}
                 </Button>
                
 
@@ -120,7 +122,7 @@ export default function BarcodeScanner() {
   const router = useRouter();
   const [inputBarcode, setInputBarcode] = useState("");
 
-  const handleManualEntry = (e: React.FormEvent) => {
+  const handleManualEntry = async(e: React.FormEvent) => {
     e.preventDefault();
     setPending(true);
     if (inputBarcode.trim()) {
@@ -128,6 +130,12 @@ export default function BarcodeScanner() {
     }
     setPending(false);
   };
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleManualEntry(e);
+    }
+  }
   if (loading) {
     return <div className="h-10 w-full animate-pulse bg-gray-200 dark:bg-gray-800 rounded-md" />;
   }
@@ -144,6 +152,7 @@ export default function BarcodeScanner() {
                 placeholder="Barcode"
                 value={inputBarcode}
                 onChange={(e) => setInputBarcode(e.target.value)}
+                onKeyDown={onKeyDown}
               />
               <Button
                 type="button"
