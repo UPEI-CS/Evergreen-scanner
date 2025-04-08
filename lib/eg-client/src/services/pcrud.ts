@@ -12,6 +12,9 @@ import { IdlService } from "./idl";
 import { IdlClassMapping, IdlClassName } from "../types/generated/idl-types";
 
 export class PCrudService<T extends IdlClassName | undefined = undefined> {
+  /**
+   * Stores the current query parameters being built
+   */
   private currentQuery: {
     fmClass: string;
     search?: object;
@@ -32,6 +35,9 @@ export class PCrudService<T extends IdlClassName | undefined = undefined> {
     };
   }
 
+  /**
+   * Resets the current query to its initial state
+   */
   private resetQuery() {
     this.currentQuery = {
       fmClass: "",
@@ -41,6 +47,12 @@ export class PCrudService<T extends IdlClassName | undefined = undefined> {
     };
   }
 
+  /**
+   * Specifies which Fieldmapper class to query
+   * 
+   * @param fmClass - The Fieldmapper class name
+   * @returns A new PCrudService instance with the specified class type
+   */
   from<K extends IdlClassName>(fmClass: K): PCrudService<K> {
     const newService = new PCrudService<K>(
       this.adapter,
@@ -51,26 +63,56 @@ export class PCrudService<T extends IdlClassName | undefined = undefined> {
     return newService;
   }
 
+  /**
+   * Sets the search criteria for the query
+   * 
+   * @param search - Object containing search parameters
+   * @returns This service instance for method chaining
+   */
   where(search: object): this {
     this.currentQuery.search = search;
     return this;
   }
 
+  /**
+   * Sets the flesh depth for retrieving linked objects
+   * 
+   * @param depth - How many levels of linked objects to retrieve
+   * @returns This service instance for method chaining
+   */
   flesh(depth: number): this {
     this.currentQuery.options.flesh = depth;
     return this;
   }
 
+  /**
+   * Specifies which fields to flesh (retrieve linked objects for)
+   * 
+   * @param fields - Object mapping field names to arrays of subfields
+   * @returns This service instance for method chaining
+   */
   fleshFields(fields: { [key: string]: string[] }): this {
     this.currentQuery.options.flesh_fields = fields;
     return this;
   }
 
+  /**
+   * Sets the maximum number of results to return
+   * 
+   * @param limit - Maximum number of results
+   * @returns This service instance for method chaining
+   */
   limit(limit: number): this {
     this.currentQuery.options.limit = limit;
     return this;
   }
 
+  /**
+   * Executes the query and returns the results
+   * 
+   * @param reqOpts - Optional request options
+   * @returns Promise resolving to either an array of IDs (if idlist:true) or an array of objects
+   */
   async select<O extends PcrudRequestOptions>(
     reqOpts?: O
   ): Promise<
@@ -79,18 +121,22 @@ export class PCrudService<T extends IdlClassName | undefined = undefined> {
       : ServiceResult<T extends IdlClassName ? IdlClassMapping[T][] : never, string>
   > {
     const { fmClass, ...rest } = this.currentQuery;
+    // Determine whether to return IDs or full objects
     const methodType = reqOpts?.idlist ? "id_list" : "search";
+    // Determine whether to use atomic mode (all results in one response)
     const isAtomic = reqOpts?.atomic ?? false;
     const service = "open-ils.pcrud";
     const method = isAtomic
       ? `${service}.${methodType}.${fmClass}.atomic`
       : `${service}.${methodType}.${fmClass}`;
 
+    // Format parameters based on method type
     const params =
       methodType === "id_list"
         ? [this.authToken, rest.search, rest.options]
         : [this.authToken, ...Object.values(rest)];
 
+    // Send the request
     const response = await this.adapter.send<ServiceResponse<any>>({
       service: service,
       method: method,

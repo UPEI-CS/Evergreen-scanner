@@ -158,7 +158,16 @@ export class CircService {
     };
   }
 
-  async updateItemInventory(itemIds: number[], wsId?: number) {
+  /**
+   * Updates inventory information for the specified items
+   * @param itemIds Array of item IDs to update inventory for
+   * @param wsId Optional workstation ID
+   * @returns A ServiceResult containing success and failure counts
+   */
+  async updateItemInventory(
+    itemIds: number[], 
+    wsId?: number
+  ): Promise<ServiceResult<{ successCount: number; failureCount: number }, string>> {
     const method = "open-ils.circ.circulation.update_copy_inventory";
     const args = {
       copy_list: itemIds,
