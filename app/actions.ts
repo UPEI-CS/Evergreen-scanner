@@ -96,7 +96,13 @@ export async function validateServer(server: string) {
     }
 
     const cookieStore = await cookies();
-    cookieStore.set("EG_SERVER", server);
+    cookieStore.set("EG_SERVER", server, {
+      maxAge: 60 * 60 * 24 * 365 * 2,
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    });
     
     return {
       success: true,
